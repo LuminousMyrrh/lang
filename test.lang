@@ -1,0 +1,8 @@
+var some = 10;
+
+func test() {
+    print(10);
+    return 0;
+}
+
+test();
