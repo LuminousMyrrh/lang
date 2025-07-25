@@ -1,170 +1,164 @@
 package main
 
 import (
-	"errors"
 	"fmt"
+	"os"
 )
+
+type returnValue struct {
+    value any
+}
+
+type breakSignal struct {}
+
+type nilValue struct {}
 
 type Evaluator struct {
 	Entry *ProgramNode
 	Environment *Env
 	currentEnv *Env
 	Errors []error
+	parser *Parser
+	lexer *Lexer
+	Builtins map[string]BuiltinFunction
 }
 
 func (e *Evaluator) Eval(env *Env, entry *ProgramNode) {
 	e.Environment = env
 	e.Entry = entry
 	e.currentEnv = env
+	e.Builtins = map[string]BuiltinFunction{
+		"print":   builtinPrint,
+		"println": builtinPrintln,
+		"type":    builtinType,
+		"input":   builtinInput,
+		"atoi":    builtinAtoi,
+		"itoa":    builtinItoa,
+		"len":     builtinLen,
+	}
+
 
 	for _, stmt := range entry.Nodes{
-		e.eval(stmt)
+		if val := e.eval(stmt); val == nil {
+			return
+		}
 	}
+
+	e.Environment = e.currentEnv
 }
 
 func (e *Evaluator) eval(stmt Node) any {
-	fmt.Printf("Evaluating node: %T\n", stmt)
+	// fmt.Printf("Evaluating node: %T\n", stmt)
 
 	switch s := stmt.(type) {
-	case VarDefNode: {
+	case *VarDefNode:
 		return e.evalVarDef(s)
-	}
-	case FunctionDefNode: {
+	case *FunctionDefNode:
 		return e.evalFunctionDef(s)
-	}
-	case BinaryOpNode: {
+	case *BinaryOpNode:
 		return e.evalBinary(s)
-	}
-	case IdentifierNode: {
+	case *IdentifierNode:
 		return e.evalIdentifier(s)
-	}
-	case FunctionCallNode: {
+	case *FunctionCallNode: 
 		return e.evalFunctionCall(s)
-	}
-	case LiteralNode: {
+	case *LiteralNode: 
 		return e.evalLiteral(s)
-	}
-	case ReturnNode:
+	case *TrueNode:
+		return e.evalTrue()
+	case *FalseNode:
+		return e.evalFalse()
+	case *ReturnNode:
 		return e.evalReturn(s)
+	case *AssignmentNode:
+		return e.evalAssignment(s)
+	case *IfNode: 
+		return e.evalIf(s)
+	case *BlockNode:
+		return e.evalBlock(s)
+	case *UnaryOpNode:
+		return e.evalUnary(s)
+	case *WhileNode:
+		return e.evalWhile(s)
+	case *ArrayNode:
+		return e.evalArray(s)
+	case *ArrayAccessNode:
+		return e.evalArrayAccess(s)
+	case *ArrayAssign:
+		return e.evalArrayAssign(s)
+	case *ImportNode: 
+		return e.evalImport(s)
+	case *StructDefNode:
+		return e.evalStructDef(s)
+	case *StructMethodDef:
+		return e.evalStructMethodDef(s)
+	case *StructInitNode:
+		return e.evalStructInit(s)
+	case *StructMethodCall:
+		return e.evalStructMemberAccess(s)
+	case *NilNode:
+		return e.evalNil(s)
 	default: {
+		e.genError(fmt.Sprintf("Unknown node type: %T", s), Position{-1, -1})
 		return nil
 	}
 	}
 }
 
-func (e *Evaluator) evalReturn(ret ReturnNode) any {
-	return e.eval(ret.Value)
-}
-
-func (e *Evaluator) evalVarDef(stmt VarDefNode) any {
-	value := e.eval(stmt.Value)
-	e.currentEnv.AddVarSymbol(stmt.Name, "", value)
-	return value
-}
-
-func (e *Evaluator) evalLiteral(lit LiteralNode) any {
-	return lit.Value
-}
-
-func (e *Evaluator) evalIdentifier(id IdentifierNode) any {
-	return e.currentEnv.FindSymbol(id.Name)
-}
-
-func (e *Evaluator) evalBinary(expr BinaryOpNode) any {
-	left := e.eval(expr.Left)
-	right := e.eval(expr.Right)
-	if _, ok := left.(int); !ok {
-		e.genError(fmt.Sprintf("Failed to convert to int: %v", left))
-		e.genError("Failed to convert to int")
+func (e *Evaluator) evalImport(stmt *ImportNode) any {
+	fileName := stmt.File + ".lang"
+	data, err := os.ReadFile(fileName)
+	if err != nil {
+		e.genError(fmt.Sprintf(
+			"Failed to read imported file: %s", err),
+			stmt.Position,
+			)
 		return nil
 	}
 
-	if _, ok := right.(int); !ok {
-		e.genError(fmt.Sprintf("Failed to convert to int: %v", right))
+	content := string(data)
+	e.lexer = &Lexer{};
+	toks, err := e.lexer.Read(content)
+	if err != nil {
+		e.genError(fmt.Sprintf("Failed to read file: %s", err),
+			stmt.Position,
+			)
 		return nil
 	}
-
-	switch expr.Op {
-	case "+": {
-		return left.(int) + right.(int)
-	}
-	case "-": {
-		return left.(int) - right.(int)
-	}
-	case "/": {
-		return left.(int) / right.(int)
-	}
-	case "*": {
-		return left.(int) * right.(int)
-	}
-	}
-
-	return nil
-}
-
-func (e *Evaluator) genError(msg string) {
-	e.Errors = append(e.Errors, errors.New(msg))
-}
-
-func (e *Evaluator) evalFunctionDef(funcDef FunctionDefNode) any {
-	e.currentEnv.AddFuncSymbol(
-		funcDef.Name,
-		funcDef.Parameters,
-		funcDef.Body,
-		NewEnv(e.currentEnv),
-		)
-	return nil
-}
-
-func (e *Evaluator) evalFunctionCall(call FunctionCallNode) any {
-	if call.Name == "print" {
-		for _, arg := range call.Args {
-			val := e.eval(arg)
-			fmt.Print(val)
+	e.parser = NewParser(toks)
+	mnode, errs := e.parser.Parse()
+	if len(errs) != 0 {
+		for _, err := range errs {
+			fmt.Println(err)
 		}
-		fmt.Println()
 		return nil
 	}
 
-	fmt.Println(call.String())
-	function := e.currentEnv.FindSymbol(call.Name)
-	if function == nil {
-		e.genError(fmt.Sprintf("Function '%s' not found", call.Name))
-		return nil
-	}
+	// -----------------
 
-	switch f := function.(type) {
-	case FuncSymbol: {
-		params := f.Params
-		if len(call.Args) != len(params) {
-			e.genError(fmt.Sprintf(
-				"Function '%s' accepts %d, but passed only %d",
-					call.Name,
-					len(params),
-					len(call.Args)))
-
+	if len(stmt.Symbols) == 0 { 
+		// mnode.Print() 
+		evaluator := Evaluator{}
+		evaluator.Eval(NewEnv(nil, "global"), mnode)
+		if len(evaluator.Errors) > 0 {
+			for _, err := range evaluator.Errors {
+				fmt.Println("Runtime error: ", err)
+			}
 			return nil
 		}
 
-		prevEnv := e.currentEnv
-		e.currentEnv = f.Enf
+		return 1
 
-		// evaling args and adding them to function env
-		for i, arg := range call.Args {
-			value := e.eval(arg)
-			e.currentEnv.AddVarSymbol(params[i], "", value)
+	} else {
+		for _, symbol := range stmt.Symbols {
+			node, err := mnode.Find(symbol)
+			if err != nil {
+				e.genError(err.Error(), stmt.Position)
+				return nil
+			}
+			e.eval(node)
 		}
+		return 1
 
-		for _, stmt := range f.Body.Statements {
-			e.eval(stmt)
-		}
-
-		e.currentEnv = prevEnv
 	}
-	default:
-		e.genError("Something very very wrong here")
-		return nil
-	}
-
-	return nil
 }
+

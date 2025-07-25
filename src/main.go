@@ -1,18 +1,16 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"os"
-	"strings"
 )
 
 func eval(source string) (error) {
-	globalEnv := NewEnv(nil)
+	globalEnv := NewEnv(nil, "global")
 	lexer := Lexer{};
 	toks, err := lexer.Read(source);
-	fmt.Println("Scanning done")
-	parser := NewParser(globalEnv, toks);
+	//fmt.Println("Scanning done")
+	parser := NewParser(toks);
 	if err != nil {
 		return err
 	}
@@ -21,19 +19,15 @@ func eval(source string) (error) {
 		fmt.Println("No tokens found");
 		return nil
 	}
-	for _, tok := range toks {
-		fmt.Printf("Tok: %v Type: %v\n", tok.Lexeme, tok.TType)
-	}
 
-	mnode, errs := parser.Parse(toks)
-	fmt.Println("Parsing done")
+	mnode, errs := parser.Parse()
 
 	if len(errs) != 0 {
 		for _, err := range errs {
 			fmt.Println(err)
 		}
 	} else {
-		//mnode.Print()
+		// mnode.Print()
 		evaluator := Evaluator{}
 		evaluator.Eval(globalEnv, mnode)
 		if len(evaluator.Errors) > 0 {
@@ -46,22 +40,10 @@ func eval(source string) (error) {
 	return nil
 }
 
-func repl() {
-	reader := bufio.NewReader(os.Stdin)
-	var history []string
+func enterRepl() {
+	repl := NewRepl()
 
-	for {
-		fmt.Print("&> ")
-		input, _ := reader.ReadString('\n')
-		input = strings.TrimSpace(input)
-		history = append(history, input)
-		if input == "exit" || input == ":q" {
-			break
-		}
-		if err := eval(input); err != nil {
-			fmt.Println("Error: ", err)
-		}
-	}
+	repl.Start()
 }
 
 func main() {
@@ -70,7 +52,7 @@ func main() {
 
 	} else {
 		if args[1] == "repl" {
-			repl()
+			enterRepl()
 		} else {
 			fileName := args[1]
 			data, err := os.ReadFile(fileName)

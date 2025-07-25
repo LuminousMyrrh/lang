@@ -6,53 +6,66 @@ import (
 )
 
 type TokenType int
+
 const (
 	Func TokenType = iota
-	If 
-	While 
-	For 
-	Foreach 
-	Struct 
-	Interface 
-	Var 
-	Const 
-	Return 
-	Identifier 
+	If
+	Else
+	While
+	For
+	Foreach
+	Struct
+	Class
+	Interface
+	Var
+	Const
+	Return
+	Identifier
 	String
 
-	Import 
+	Import
 	Private
+	Public
 
-	Plus 
+	True
+	False
+	Nil
+
+	Plus
 	PlusPlus // ++
-	Minus 
+	PlusEq   // +=
+	Minus
 	MinusMinus // --
-	Slash 
-	OpSlash 
-	Star 
+	MinusEq    // -=
+	Slash
+	OpSlash
+	Star
 
-	LParen 
-	RParen 
+	LeftArrow  // <-
+	RightArrow // ->
 
-	LBrace 
-	RBrace 
+	LParen
+	RParen
 
-	LCurly 
-	RCurly 
+	LBrace
+	RBrace
 
-	And 
-	Or 
-	Assign  // =
-	Bang 
-	NotEquals  // != 
-	Equals  // ==
-	Less 
-	More 
-	LessEq 
-	MoreEq  
-	Question 
-	Semicolon 
-	Colon 
+	LCurly
+	RCurly
+
+	And // &&
+	Or  // ||
+	Assign
+	Bang
+	NotEquals
+	Equals
+	Less
+	More
+	LessEq
+	MoreEq
+	Question
+	Semicolon
+	Colon
 
 	Comma
 	Dot
@@ -64,220 +77,343 @@ const (
 
 type Token struct {
 	Lexeme string
-	TType TokenType 
-	Line int
+	TType  TokenType
+	Line   int
 	Column int
 }
 
 type Lexer struct {
-	source []rune
-	current_line int
-	current_column int
+	source        []rune
+	currentLine   int
+	currentColumn int
 }
 
 func (l *Lexer) Read(s string) ([]*Token, error) {
-	source := []rune(s)
+	l.source = []rune(s)
+	length := len(l.source)
 	var tokens []*Token
-	l.source = source
-	length := len(l.source) - 1
+	l.currentLine = 1
+	l.currentColumn = 1
 
-	for i := 0; i < len(l.source); i++ {
-		ch := source[i]
-		l.current_column = i
+	for i := 0; i < length; i++ {
+		ch := l.source[i]
 
-		switch {
-		case unicode.IsSpace(ch):
+		// Handle newlines first
+		if ch == '\n' {
+			l.currentLine++
+			l.currentColumn = 1
 			continue
-		case unicode.IsLetter(ch): {
-			start := i
-			for i < length && (unicode.IsLetter(source[i]) || unicode.IsDigit(source[i]) || source[i] == '_') {
-				i++
-			}
-			current_word := string(l.source[start:i])
-			wordType := l.getWordType(current_word)
-			tokens = append(tokens, l.genToken(current_word, wordType))
-			i--
 		}
-		case unicode.IsDigit(ch): {
-			start := i
-			for i < length && unicode.IsDigit(source[i]) {
-				i++
-			}
-			current_word := string(l.source[start:i])
-			tokens = append(tokens, l.genToken(current_word, Digit))
-			i--
+
+		// Skip other whitespace (except newline) but update column
+		if unicode.IsSpace(ch) {
+			l.currentColumn++
+			continue
 		}
-		default: 
-			switch ch {
-			case '\n':
-				l.current_line++
-				l.current_column = 0
-			case '(':
-				tokens = append(tokens, l.genToken(string(ch), LParen))
-			case ')':
-				tokens = append(tokens, l.genToken(string(ch), RParen))
-			case '{':
-				tokens = append(tokens, l.genToken(string(ch),LCurly))
-			case '}':
-				tokens = append(tokens, l.genToken(string(ch),RCurly))
-			case '[':
-				tokens = append(tokens, l.genToken(string(ch),LBrace))
-			case ']':
-				tokens = append(tokens, l.genToken(string(ch),RBrace))
 
-			case ';':
-				tokens = append(tokens, l.genToken(string(ch),Semicolon))
-			case ':':
-				tokens = append(tokens, l.genToken(string(ch),Colon))
+		startColumn := l.currentColumn
 
-			case '+':
-				if l.Next(i) == '+' {
-					current_word := "++"
-					tokens = append(tokens, l.genToken(current_word,PlusPlus))
-					i++
-					continue
-				} else {
-					tokens = append(tokens, l.genToken(string(ch), Plus))
-				}
-			case '-':
-				if l.Next(i) == '-' {
-					current_word := "--"
-					tokens = append(tokens, l.genToken(current_word, MinusMinus))
-					i++
-					continue
-				} else {
-					tokens = append(tokens, l.genToken(string(ch),Minus))
-				}
-			case '/':
-				if l.Next(i) == '/' {
-					current_word := "//"
-					tokens = append(tokens, l.genToken(current_word, Comment))
-					i++
-					continue
-				}
-				tokens = append(tokens, l.genToken(string(ch), Slash))
-			case '*':
-				tokens = append(tokens, l.genToken(string(ch),Star))
-
-			case '<':
-				if l.Next(i) == '=' {
-					current_word := "<="
-					i++
-					tokens = append(tokens, l.genToken(current_word, LessEq))
-					continue
-				}
-				tokens = append(tokens, l.genToken(string(ch), Less))
-
-			case '>':
-				if l.Next(i) == '=' {
-					current_word := ">="
-					i++
-					tokens = append(tokens, l.genToken(current_word, MoreEq))
-					continue
-				}
-				tokens = append(tokens, l.genToken(string(ch),More))
-
-			case '=':
-				if l.Next(i) == '=' {
-					current_word := "=="
-					i++
-					tokens = append(tokens, l.genToken(current_word, Equals))
-					continue
-				}
-				tokens = append(tokens, l.genToken(string(ch),Assign))
-			case '?':
-				tokens = append(tokens, l.genToken(string(ch),Question))
-			case '.':
-				tokens = append(tokens, l.genToken(string(ch),Dot))
-			case ',':
-				tokens = append(tokens, l.genToken(string(ch),Comma))
-			case '"': {
+		// Identifiers/Keywords
+		if unicode.IsLetter(ch) {
+			start := i
+			for i < length && (unicode.IsLetter(l.source[i]) || unicode.IsDigit(l.source[i]) || l.source[i] == '_') {
 				i++
-				var str []rune
-				for i < length {
-					if source[i] == '"' {
-						break
-					}
-					if source[i] == '\\' && i+1 < length {
-						// Handle escape sequences
-						nextChar := source[i+1]
-						if nextChar == '"' {
-							str = append(str, '"')
-							i += 2
-							continue
-						} else if nextChar == '\\' {
-							str = append(str, '\\')
-							i += 2
-							continue
-						}
-						// Add more escape handling as needed (\n, \t, etc.)
-					}
-					str = append(str, source[i])
-					i++
-				}
-				if i >= length {
-					fmt.Println("Unterminated string literal")
+				l.currentColumn++
+			}
+			word := string(l.source[start:i])
+			tokenType := l.getWordType(word)
+			tokens = append(tokens, l.genTokenAtPosition(word, tokenType, l.currentLine, startColumn))
+			i-- // Adjust for the for loop increment
+			continue
+		}
+
+		// Numbers
+		if unicode.IsDigit(ch) {
+			start := i
+			for i < length && unicode.IsDigit(l.source[i]) {
+				i++
+				l.currentColumn++
+			}
+			word := string(l.source[start:i])
+			tokens = append(tokens, l.genTokenAtPosition(word, Digit, l.currentLine, startColumn))
+			i--
+			continue
+		}
+
+		// Handle strings
+		if ch == '"' {
+			i++             // move past initial quote
+			l.currentColumn++ // initial quote counts as one column
+			var str []rune
+
+			for i < length {
+				c := l.source[i]
+
+				if c == '"' {
 					break
 				}
-				tokens = append(tokens, l.genToken(string(str), String))
-			}
-			default: 
-				fmt.Println("unknown character: ", ch)
-				continue
+
+				if c == '\n' {
+					l.currentLine++
+					l.currentColumn = 1
+					i++
+					continue
+				}
+
+				if c == '\\' && i+1 < length {
+					nextChar := l.source[i+1]
+					switch nextChar {
+					case '"', '\\', 'n', 't', 'r':
+						// For simplicity, just add the escaped char literally
+						if nextChar == 'n' {
+							str = append(str, '\n')
+						} else if nextChar == 't' {
+							str = append(str, '\t')
+						} else if nextChar == 'r' {
+							str = append(str, '\r')
+						} else {
+							str = append(str, nextChar)
+						}
+						i += 2
+						l.currentColumn += 2
+						continue
+					}
+				}
+
+				str = append(str, c)
+				i++
+				l.currentColumn++
 			}
 
+			if i >= length || l.source[i] != '"' {
+				return tokens, fmt.Errorf("unterminated string literal at line %d, column %d", l.currentLine, l.currentColumn)
+			}
+			// Consume closing quote
+			l.currentColumn++
+			tokens = append(tokens, l.genTokenAtPosition(string(str), String, l.currentLine, startColumn))
+			continue
+		}
+
+		// Handle comments (// ... to end of line)
+		if ch == '/' && l.Next(i) == '/' {
+			startColumn := l.currentColumn
+			i += 2
+			l.currentColumn += 2
+			var commentRunes []rune
+
+			for i < length && l.source[i] != '\n' {
+				commentRunes = append(commentRunes, l.source[i])
+				i++
+				l.currentColumn++
+			}
+			tokens = append(tokens, l.genTokenAtPosition(string(commentRunes), Comment, l.currentLine, startColumn))
+			i-- // adjust for outer loop
+			continue
+		}
+
+		// Handle multi-char and single-char tokens
+		switch ch {
+		case '+':
+			if l.Next(i) == '+' {
+				tokens = append(tokens, l.genTokenAtPosition("++", PlusPlus, l.currentLine, startColumn))
+				i++
+				l.currentColumn += 2
+				continue
+			} else if l.Next(i) == '=' {
+				tokens = append(tokens, l.genTokenAtPosition("+=", PlusEq, l.currentLine, startColumn))
+				i++
+				l.currentColumn += 2
+				continue
+			}
+			tokens = append(tokens, l.genTokenAtPosition("+", Plus, l.currentLine, startColumn))
+			l.currentColumn++
+		case '-':
+			if l.Next(i) == '-' {
+				tokens = append(tokens, l.genTokenAtPosition("--", MinusMinus, l.currentLine, startColumn))
+				i++
+				l.currentColumn += 2
+				continue
+			} else if l.Next(i) == '>' {
+				tokens = append(tokens, l.genTokenAtPosition("->", RightArrow, l.currentLine, startColumn))
+				i++
+				l.currentColumn += 2
+				continue
+			} else if l.Next(i) == '=' {
+				tokens = append(tokens, l.genTokenAtPosition("-=", MinusEq, l.currentLine, startColumn))
+				i++
+				l.currentColumn += 2
+				continue
+			}
+			tokens = append(tokens, l.genTokenAtPosition("-", Minus, l.currentLine, startColumn))
+			l.currentColumn++
+		case '/':
+			if l.Next(i) == '/' {
+				// Already handled comment above, but could include here if needed
+				// Skipping here because handled above
+				l.currentColumn++
+			} else {
+				tokens = append(tokens, l.genTokenAtPosition("/", Slash, l.currentLine, startColumn))
+				l.currentColumn++
+			}
+		case '*':
+			tokens = append(tokens, l.genTokenAtPosition("*", Star, l.currentLine, startColumn))
+			l.currentColumn++
+		case '<':
+			if l.Next(i) == '=' {
+				tokens = append(tokens, l.genTokenAtPosition("<=", LessEq, l.currentLine, startColumn))
+				i++
+				l.currentColumn += 2
+				continue
+			} else if l.Next(i) == '-' {
+				tokens = append(tokens, l.genTokenAtPosition("<-", LeftArrow, l.currentLine, startColumn))
+				i++
+				l.currentColumn += 2
+				continue
+			}
+			tokens = append(tokens, l.genTokenAtPosition("<", Less, l.currentLine, startColumn))
+			l.currentColumn++
+		case '>':
+			if l.Next(i) == '=' {
+				tokens = append(tokens, l.genTokenAtPosition(">=", MoreEq, l.currentLine, startColumn))
+				i++
+				l.currentColumn += 2
+				continue
+			}
+			tokens = append(tokens, l.genTokenAtPosition(">", More, l.currentLine, startColumn))
+			l.currentColumn++
+		case '=':
+			if l.Next(i) == '=' {
+				tokens = append(tokens, l.genTokenAtPosition("==", Equals, l.currentLine, startColumn))
+				i++
+				l.currentColumn += 2
+				continue
+			}
+			tokens = append(tokens, l.genTokenAtPosition("=", Assign, l.currentLine, startColumn))
+			l.currentColumn++
+		case '&':
+			if l.Next(i) == '&' {
+				tokens = append(tokens, l.genTokenAtPosition("&&", And, l.currentLine, startColumn))
+				i++
+				l.currentColumn += 2
+				continue
+			}
+			tokens = append(tokens, l.genTokenAtPosition("&", And, l.currentLine, startColumn))
+			l.currentColumn++
+		case '|':
+			if l.Next(i) == '|' {
+				tokens = append(tokens, l.genTokenAtPosition("||", Or, l.currentLine, startColumn))
+				i++
+				l.currentColumn += 2
+				continue
+			}
+			tokens = append(tokens, l.genTokenAtPosition("|", Or, l.currentLine, startColumn))
+			l.currentColumn++
+		case '!':
+			if l.Next(i) == '=' {
+				tokens = append(tokens, l.genTokenAtPosition("!=", NotEquals, l.currentLine, startColumn))
+				i++
+				l.currentColumn += 2
+				continue
+			}
+			tokens = append(tokens, l.genTokenAtPosition("!", Bang, l.currentLine, startColumn))
+			l.currentColumn++
+		case '?':
+			tokens = append(tokens, l.genTokenAtPosition("?", Question, l.currentLine, startColumn))
+			l.currentColumn++
+		case ';':
+			tokens = append(tokens, l.genTokenAtPosition(";", Semicolon, l.currentLine, startColumn))
+			l.currentColumn++
+		case ':':
+			tokens = append(tokens, l.genTokenAtPosition(":", Colon, l.currentLine, startColumn))
+			l.currentColumn++
+		case ',':
+			tokens = append(tokens, l.genTokenAtPosition(",", Comma, l.currentLine, startColumn))
+			l.currentColumn++
+		case '.':
+			tokens = append(tokens, l.genTokenAtPosition(".", Dot, l.currentLine, startColumn))
+			l.currentColumn++
+		case '(':
+			tokens = append(tokens, l.genTokenAtPosition("(", LParen, l.currentLine, startColumn))
+			l.currentColumn++
+		case ')':
+			tokens = append(tokens, l.genTokenAtPosition(")", RParen, l.currentLine, startColumn))
+			l.currentColumn++
+		case '{':
+			tokens = append(tokens, l.genTokenAtPosition("{", LCurly, l.currentLine, startColumn))
+			l.currentColumn++
+		case '}':
+			tokens = append(tokens, l.genTokenAtPosition("}", RCurly, l.currentLine, startColumn))
+			l.currentColumn++
+		case '[':
+			tokens = append(tokens, l.genTokenAtPosition("[", LBrace, l.currentLine, startColumn))
+			l.currentColumn++
+		case ']':
+			tokens = append(tokens, l.genTokenAtPosition("]", RBrace, l.currentLine, startColumn))
+			l.currentColumn++
+		default:
+			fmt.Printf("Unknown character '%c' at line %d, column %d\n", ch, l.currentLine, l.currentColumn)
+			l.currentColumn++ // skip unknown char to avoid infinite loop
 		}
 	}
 
 	return tokens, nil
 }
 
-func (l *Lexer) genToken(word string, t_type TokenType) *Token {
-	return &Token {
-		word,
-		t_type,
-		l.current_line,
-		l.current_column,
+func (l *Lexer) genTokenAtPosition(lexeme string, ttype TokenType, line int, column int) *Token {
+	return &Token{
+		Lexeme: lexeme,
+		TType:  ttype,
+		Line:   line,
+		Column: column,
 	}
 }
 
-func (l *Lexer) Next(curr_idx int) rune {
-	if curr_idx + 1 < len(l.source) {
-		return l.source[curr_idx + 1]
+func (l *Lexer) Next(i int) rune {
+	if i+1 < len(l.source) {
+		return l.source[i+1]
 	}
-	return '\a';
+	return 0
 }
 
 func (l *Lexer) getWordType(word string) TokenType {
-	var wordType TokenType
 	switch word {
+	case "true":
+		return True
+	case "false":
+		return False
 	case "func":
-		wordType = Func
+		return Func
 	case "if":
-		wordType = If
+		return If
+	case "else":
+		return Else
 	case "while":
-		wordType = While
+		return While
 	case "for":
-		wordType = For
+		return For
 	case "foreach":
-		wordType = Foreach
+		return Foreach
 	case "struct":
-		wordType = Struct
+		return Struct
+	case "class":
+		return Struct
 	case "interface":
-		wordType = Interface
+		return Interface
 	case "var":
-		wordType = Var
+		return Var
 	case "const":
-		wordType = Const
+		return Const
 	case "return":
-		wordType = Return
+		return Return
 	case "import":
-		wordType = Import
-	case "private":
-		wordType = Private
-	default: 
-		wordType = Identifier
+		return Import
+	case "pri", "private":
+		return Private
+	case "pub", "public":
+		return Public
+	case "nil":
+		return Nil
+	default:
+		return Identifier
 	}
-
-	return wordType
 }

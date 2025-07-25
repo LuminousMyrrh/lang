@@ -1,8 +1,7 @@
-var some = 10;
-
-func test() {
-    print(10);
-    return 0;
+func main() {
+    for (var i = 0; i < 10; i++) {
+        println("I is: ", i);
+    }
 }
 
-test();
+main();
