@@ -390,7 +390,11 @@ type ForNode struct {
 }
 
 func (f *ForNode) String() string {
-	return "";
+	return fmt.Sprintf("[%v] [%v] [%v] \n[\n%v\n]",
+		f.Init,
+		f.Condition,
+		f.Post,
+		f.Body)
 }
 
 type BreakNode struct {

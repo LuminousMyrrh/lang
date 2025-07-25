@@ -40,36 +40,56 @@ func (p *Parser) parseWhile() *WhileNode {
 	}
 }
 
-func (p *Parser) parseFor() *ForNode {
+func (p *Parser) parseForLoop() *ForNode {
 	p.advance()
+	initToken := p.currentToken()
 	if !p.expectAndAdvance(LParen) {
 		return nil
 	}
-	var Init *VarDefNode
+	var Init *VarDefNode = nil
 	if p.currentToken().TType == Semicolon {
-		Init = nil
 		p.advance()
 	} else {
 		Init = p.parseVarDef()
+		if Init == nil {
+			return nil
+		}
+	}
+	var Condition Node = nil
+	if p.currentToken().TType == Semicolon {
+		p.advance()
+	} else {
+		Condition = p.parseExpression(0)
 		if !p.expectAndAdvance(Semicolon) {
 			return nil
 		}
 	}
-	var Condition Node
-	if p.currentToken().TType == Semicolon {
-		Condition = nil
-		p.advance()
-	} else {
-		Condition = p.parseExpression(0)
-	}
-	var Post Node
+	var Post Node = nil
 	if p.currentToken().TType == RParen {
-		Post = nil
+		p.advance()
 	} else {
 		Post = p.parseExpression(0)
 		if !p.expectAndAdvance(RParen) {
 			return nil
 		}
 	}
-	return nil
+
+	if !p.expectAndAdvance(LCurly) {
+		return nil
+	}
+
+	body := p.parseBlock()
+
+	node := &ForNode{
+		Position {
+			Row: initToken.Line,
+			Column: initToken.Column,
+		},
+		Init,
+		Condition,
+		Post,
+		body,
+	}
+
+	return node
 }

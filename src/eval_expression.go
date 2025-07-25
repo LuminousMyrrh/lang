@@ -69,6 +69,13 @@ func (e *Evaluator) evalUnary(node *UnaryOpNode) any {
 		return nil
 	}
 	switch node.Op {
+	case "++", "--": {
+		if node.Op == "++" {
+			return e.handlePostfixPP(node)
+		} else {
+			return e.handlePostfixMM(node)
+		}
+	}
 	case "-":
 		// Negation for numbers
 		if v, ok := value.(int); ok {
@@ -246,6 +253,52 @@ func (e *Evaluator) evalLogical(node *BinaryOpNode) any {
 	return nil
 }
 
+
+func (e *Evaluator) handlePostfixPP(node *UnaryOpNode) any {
+	ident, ok := node.Expr.(*IdentifierNode)
+	if !ok {
+		e.genError("++ operator requires an identifier",
+			node.Position)
+		return nil
+	}
+
+	val := e.currentEnv.FindSymbol(ident.Name)
+	intVal, ok := val.(int)
+	if !ok {
+		e.genError("++ operator requires integer value",
+			node.Position)
+		return nil
+	}
+
+	origVal := val
+
+	e.currentEnv.UpdateSymbol(ident.Name, intVal+1)
+
+	return origVal
+}
+
+func (e *Evaluator) handlePostfixMM(node *UnaryOpNode) any {
+	ident, ok := node.Expr.(*IdentifierNode)
+	if !ok {
+		e.genError("-- operator requires an identifier",
+			node.Position)
+		return nil
+	}
+
+	val := e.currentEnv.FindSymbol(ident.Name)
+	intVal, ok := val.(int)
+	if !ok {
+		e.genError("-- operator requires integer value",
+			node.Position)
+		return nil
+	}
+
+	origVal := val
+
+	e.currentEnv.UpdateSymbol(ident.Name, intVal-1)
+
+	return origVal
+}
 
 func isNilValue(x any) bool {
     _, ok := x.(nilValue)

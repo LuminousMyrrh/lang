@@ -79,6 +79,9 @@ func (p *Parser) parseBlock() *BlockNode {
 
 	for p.currentToken().TType != RCurly {
 		stmt := p.parseStatement()
+		if stmt == nil {
+			return nil
+		}
 		if _, ok := stmt.(*SemicolonNode); !ok {
 			body.Statements = append(body.Statements, stmt)
 		}

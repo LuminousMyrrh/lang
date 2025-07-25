@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 )
 
@@ -120,4 +121,62 @@ func builtinLen(e *Evaluator, args []Node, pos Position) any {
     }
     e.genError("len: argument must be array", pos)
     return nil
+}
+
+// builtinReadAll implements the 'readAll' builtin function.
+// Usage: readAll("filename") -> file contents as bytes
+func builtinReadAll(e *Evaluator, args []Node, pos Position) any {
+    if len(args) == 0 {
+        e.genError("Function 'readAll' expects at least one argument, but 0 were provided", pos)
+        return nil
+    }
+    evaledFileName := e.eval(args[0])
+    fileName, ok := evaledFileName.(string)
+    if !ok {
+        e.genError(fmt.Sprintf(
+            "Argument to 'readAll' must be a file name as string, got: %v", evaledFileName), pos)
+        return nil
+    }
+
+    data, err := os.ReadFile(fileName)
+    if err != nil {
+        e.genError(err.Error(), pos)
+        return nil
+    }
+    return string(data)
+}
+
+func builtinWrite(e *Evaluator, args []Node, pos Position) any {
+	if len(args) != 2 {
+		e.genError(
+			"Function 'write' expect two arguments", pos);
+		return nil
+	}
+	evaledFileName := e.eval(args[0])
+	evaledValue := e.eval(args[1])
+	if fileName, ok := evaledFileName.(string); ok {
+		var value []byte
+		switch val := evaledValue.(type) {
+		case string: {
+			value = []byte(val)
+		}
+		case int: {
+			value = []byte(strconv.Itoa(val))
+		}
+		default: {
+			e.genError(fmt.Sprintf(
+				"Usupported type for 'write': %T", val),
+				pos)
+			return nil
+		}
+		}
+		data := os.WriteFile(fileName, value, 0644)
+		return data
+	} else {
+		e.genError(fmt.Sprintf(
+			"Argument in 'readAll' should be file name as string, but got: %v",
+				evaledFileName),
+			pos)
+		return nil
+	}
 }

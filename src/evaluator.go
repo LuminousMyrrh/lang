@@ -35,6 +35,8 @@ func (e *Evaluator) Eval(env *Env, entry *ProgramNode) {
 		"atoi":    builtinAtoi,
 		"itoa":    builtinItoa,
 		"len":     builtinLen,
+		"readAll": builtinReadAll,
+		"write":   builtinWrite,
 	}
 
 
@@ -79,6 +81,8 @@ func (e *Evaluator) eval(stmt Node) any {
 		return e.evalUnary(s)
 	case *WhileNode:
 		return e.evalWhile(s)
+	case *ForNode:
+		return e.evalFor(s)
 	case *ArrayNode:
 		return e.evalArray(s)
 	case *ArrayAccessNode:

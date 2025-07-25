@@ -35,6 +35,8 @@ func (p *Parser) genAst() {
 			if _, ok := node.(*SemicolonNode); !ok {
 				p.MainNode.Nodes = append(p.MainNode.Nodes, node)
 			}
+		} else {
+			return
 		}
 	}
 }
@@ -73,7 +75,7 @@ func (p *Parser) parseStatement() Node {
 		node := p.parseIdentifier()
 		return node
 	}
-	case String: {
+	case StringTok: {
 		node := p.parseString()
 		return node
 	}
@@ -82,7 +84,7 @@ func (p *Parser) parseStatement() Node {
 		return node
 	}
 	case For: {
-		node := p.parseFor()
+		node := p.parseForLoop()
 		return node
 	}
 	case Semicolon:

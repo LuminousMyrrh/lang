@@ -55,6 +55,48 @@ func (e *Evaluator) evalWhile(stmt *WhileNode) any {
 	return result
 }
 
+func (e *Evaluator) evalFor(stmt *ForNode) any {
+	var result any
+	switch v := stmt.Init.(type) {
+	case *VarDefNode: {
+		if v != nil {
+			val := e.eval(v.Value)
+			e.currentEnv.AddVarSymbol(
+					v.Name,
+					e.resolveType(val, v.Position),
+					val)
+		}
+	}
+	case *AssignmentNode: {
+		if v != nil {
+			e.eval(v)
+		}
+	}
+	}
+	for {
+		cond := e.eval(stmt.Condition)
+		b, ok := cond.(bool)
+		if !ok {
+			e.genError("For loop condition should return bool",
+				stmt.Position)
+			return nil
+		}
+		if !b {
+			break
+		}
+		bodyResult := e.evalLoopBlock(stmt.Body)
+		if _, isBreak := bodyResult.(breakSignal); isBreak {
+			break
+		}
+		if ret, isRet := bodyResult.(returnValue); isRet {
+			return ret
+		}
+		result = bodyResult
+		e.eval(stmt.Post)
+	}
+	return result
+}
+
 func (e *Evaluator) evalReturn(ret *ReturnNode) any {
 	val := e.eval(ret.Value)
 	return returnValue{val}

@@ -23,16 +23,11 @@ func (p *Parser) parseVarDef() *VarDefNode {
 	}
 	p.advance()
 
-	// value := p.parseExpression(0)
 	value := p.parseValue()
 
-	semiTok := p.currentToken()
-	if semiTok == nil || semiTok.TType != Semicolon {
-		p.genError(fmt.Sprintf(
-			"expected ';' after var declaration: %v", nameTok))
+	if !p.expectAndAdvance(Semicolon) {
 		return nil
 	}
-	p.advance()
 	return &VarDefNode{
 		Position: Position {
 			Row: nameTok.Line,

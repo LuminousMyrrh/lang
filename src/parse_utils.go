@@ -32,12 +32,12 @@ func tokenTypeToString(t TokenType) string {
     }
 }
 
-func (p *Parser) expectAndAdvance(tType TokenType) bool{
+func (p *Parser) expectAndAdvance(tType TokenType) bool {
 	if p.currentToken().TType == tType {
 		p.advance()
 		return true
 	} else {
-		p.genError(fmt.Sprintf("Expected %T; But got: %V",
+		p.genError(fmt.Sprintf("Expected %v; But got: %v",
 			tType, p.currentToken().Lexeme))
 		return false
 	}

@@ -14,7 +14,7 @@ func (p *Parser) parseExpression(precedence int) Node {
 		left = p.parseDigit()
 	case Identifier:
 		left = p.parseIdentifier()
-	case String:
+	case StringTok:
 		left = p.parseString()
     case LParen:
         p.advance()
@@ -50,35 +50,85 @@ func (p *Parser) parseExpression(precedence int) Node {
 				Column: p.currentToken().Column,
 			},
 			Op: "!", Expr: expr}
-    default:
-        p.genError(fmt.Sprintf("unexpected token in expression: %v", tok.Lexeme))
-        return nil
-    }
+	case PlusPlus, MinusMinus:
+		op := ""
+		if tok.TType == PlusPlus {
+			op = "++"
+		} else {
+			op = "--"
+		}
+		p.advance()
 
-    // Parse infix (binary) operators
-    for {
-        next := p.currentToken()
-        if next == nil {
-            break
-        }
-        opPrec := precedenceOf(next.TType)
-        if opPrec <= precedence {
-            break
-        }
+		var expr Node
+		switch p.currentToken().TType {
+		case Identifier:
+			expr = p.parseIdentifier()
+		default:
+			p.genError(fmt.Sprintf("expected identifier after '%s'", op))
+			return nil
+		}
 
-        op := next.TType
-        p.advance()
-        right := p.parseExpression(opPrec)
-        left = &BinaryOpNode{
-			Position: Position {
+		left = &UnaryOpNode{
+			Position: Position{
 				Row: p.currentToken().Line,
 				Column: p.currentToken().Column,
 			},
-            Op:    tokenTypeToString(op),
-            Left:  left,
-            Right: right,
-        }
-    }
+			Op:   op,
+			Expr: expr,
+		}
+	default:
+		p.genError(fmt.Sprintf("unexpected token in expression: %v", tok.Lexeme))
+		return nil
+	}
+
+    // Parse infix (binary) operators
+	for {
+		next := p.currentToken()
+		if next == nil {
+			break
+		}
+		opPrec := precedenceOf(next.TType)
+
+		if opPrec <= precedence {
+			break
+		}
+
+		// handle postfix ++ and -- specially, no right expression
+		if next.TType == PlusPlus || next.TType == MinusMinus {
+			p.genError("'++' or '--' currently doesn't supported")
+			return nil
+			op := ""
+			if next.TType == PlusPlus {
+				op = "++"
+			} else {
+				op = "--"
+			}
+			p.advance()
+			// Create a UnaryOpNode with left as the Expr for postfix
+			left = &UnaryOpNode{
+				Position: Position{
+					Row: next.Line,
+					Column: next.Column,
+				},
+				Op: op,
+				Expr: left,
+			}
+			continue // continue loop for potentially chained postfix ops
+		}
+
+		op := next.TType
+		p.advance()
+		right := p.parseExpression(opPrec)
+		left = &BinaryOpNode{
+			Position: Position{
+				Row: p.currentToken().Line,
+				Column: p.currentToken().Column,
+			},
+			Op:    tokenTypeToString(op),
+			Left:  left,
+			Right: right,
+		}
+	}
     return left
 }
 
@@ -96,6 +146,8 @@ func precedenceOf(tok TokenType) int {
         return 5
     case Star, Slash:
         return 6
+	case PlusPlus, MinusMinus:
+		return 7
     }
     return 0
 }
