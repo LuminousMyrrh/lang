@@ -146,6 +146,7 @@ func (e *Evaluator) evalStructMethodCall(structEnv *Env,
 }
 
 func (e *Evaluator) evalStructMemberAccess(stmt *StructMethodCall) any {
+	fmt.Println(e.currentEnv)
     // Get the variable holding the struct instance
 	callerIdent, ok := stmt.Caller.(*IdentifierNode)
 	if !ok {

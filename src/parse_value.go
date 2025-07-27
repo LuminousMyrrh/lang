@@ -1,22 +1,40 @@
 package main
 
-import "strconv"
+import (
+	"strconv"
+)
 
 func (p *Parser) parseDigit() *LiteralNode {
-	val, err := strconv.Atoi(p.currentToken().Lexeme)
-	if err != nil {
-		p.genError(err.Error())
-		return nil
-	}
+    var val any
+    var err error
 
-	p.advance()
-	return &LiteralNode{
-		Position: Position {
-			Row: p.currentToken().Line,
-			Column: p.currentToken().Column,
-		},
-		Value: val,
-	}
+    tok := p.currentToken()
+
+    if tok.TType == Int {
+        val, err = strconv.Atoi(tok.Lexeme)
+        if err != nil {
+            p.genError(err.Error())
+            return nil
+        }
+    } else {
+        val, err = strconv.ParseFloat(tok.Lexeme, 64)
+        if err != nil {
+            p.genError(err.Error())
+            return nil
+        }
+    }
+
+    pos := Position{
+        Row:    tok.Line,
+        Column: tok.Column,
+    }
+
+    p.advance()
+
+    return &LiteralNode{
+        Position: pos,
+        Value:    val,
+    }
 }
 
 func (p *Parser) parseString() *LiteralNode {

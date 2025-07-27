@@ -140,18 +140,34 @@ func (e *Evaluator) evalImport(stmt *ImportNode) any {
 	// -----------------
 
 	if len(stmt.Symbols) == 0 { 
-		// mnode.Print() 
-		evaluator := Evaluator{}
-		evaluator.Eval(NewEnv(nil, "global"), mnode)
-		if len(evaluator.Errors) > 0 {
-			for _, err := range evaluator.Errors {
-				fmt.Println("Runtime error: ", err)
+
+		// Utils
+		structName := capitalizeFirstLetter(stmt.File)
+
+		// utils
+		varName := stmt.File
+
+		importEnv := NewEnv(e.currentEnv, structName)
+		e.currentEnv.AddStructSymbol(structName, importEnv)
+
+		for _, stmt := range mnode.Nodes {
+			fmt.Println(stmt)
+			if def, ok := stmt.(*FunctionDefNode); ok {
+				e.currentEnv.AddStructMethod(
+					structName,
+					def.Name,
+					def.Parameters,
+					def.Body.Statements,
+					)
 			}
-			return nil
 		}
 
-		return 1
+		e.currentEnv.AddVarSymbol(
+			varName, structName, importEnv)
 
+		fmt.Println(importEnv)
+
+		return 1
 	} else {
 		for _, symbol := range stmt.Symbols {
 			node, err := mnode.Find(symbol)

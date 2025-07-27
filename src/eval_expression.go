@@ -5,98 +5,159 @@ import (
 )
 
 func (e *Evaluator) evalBinary(expr *BinaryOpNode) any {
-	left := e.eval(expr.Left)
-	right := e.eval(expr.Right)
+    left := e.eval(expr.Left)
+    right := e.eval(expr.Right)
 
-	switch expr.Op {
-	case "+":
-		switch l := left.(type) {
-		case int:
-			r, ok := right.(int)
-			if !ok {
-				e.genError(
-					"Right operand of '+' must be int if left is int",
-					expr.Position)
-				return nil
-			}
-			return l + r
-		case string:
-			r, ok := right.(string)
-			if !ok {
-				e.genError(
-					"Right operand of '+' must be string if left is string",
-					expr.Position)
-				return nil
-			}
-			return l + r // String concatenation
-		default:
-			e.genError("Unsupported type for '+' operator",
-				expr.Position)
-			return nil
-		}
-	case "-", "*", "/":
-		lInt, lOk := left.(int)
-		rInt, rOk := right.(int)
-		if !lOk || !rOk {
-			e.genError(fmt.Sprintf(
-				"Operator '%s' requires integer operands", expr.Op),
-				expr.Position)
-			return nil
-		}
-		switch expr.Op {
-		case "-": return lInt - rInt
-		case "*": return lInt * rInt
-		case "/": {
-			if rInt == 0 {
-				e.genError("Division by zero!", expr.Position)
-				return nil
-			}
-			return lInt / rInt
-		}
-		}
-	default:
-		return e.evalLogical(expr)
-	}
-	e.genError("Unknown", expr.Position)
-	return nil
+    switch expr.Op {
+    case "+":
+        switch l := left.(type) {
+        case int:
+            switch r := right.(type) {
+            case int:
+                return l + r
+            case float64:
+                return float64(l) + r
+            default:
+                e.genError(
+                    "Right operand of '+' must be int or float64 if left is int",
+                    expr.Position)
+                return nil
+            }
+        case float64:
+            switch r := right.(type) {
+            case int:
+                return l + float64(r)
+            case float64:
+                return l + r
+            default:
+                e.genError(
+                    "Right operand of '+' must be int or float64 if left is float64",
+                    expr.Position)
+                return nil
+            }
+        case string:
+            r, ok := right.(string)
+            if !ok {
+                e.genError(
+                    "Right operand of '+' must be string if left is string",
+                    expr.Position)
+                return nil
+            }
+            return l + r // String concatenation
+        default:
+            e.genError("Unsupported type for '+' operator",
+                expr.Position)
+            return nil
+        }
+    case "-", "*", "/":
+        // Convert both operands to float64 if either is float64,
+        // else use int arithmetic
+        var lFloat, rFloat float64
+        var lInt, rInt int
+        lIsInt := false
+        rIsInt := false
+
+        switch l := left.(type) {
+        case int:
+            lInt = l
+            lIsInt = true
+            lFloat = float64(l)
+        case float64:
+            lFloat = l
+        default:
+            e.genError(fmt.Sprintf(
+                "Left operand of '%s' must be int or float64", expr.Op),
+                expr.Position)
+            return nil
+        }
+
+        switch r := right.(type) {
+        case int:
+            rInt = r
+            rIsInt = true
+            rFloat = float64(r)
+        case float64:
+            rFloat = r
+        default:
+            e.genError(fmt.Sprintf(
+                "Right operand of '%s' must be int or float64", expr.Op),
+                expr.Position)
+            return nil
+        }
+
+        if lIsInt && rIsInt {
+            // Both int, do integer math
+            switch expr.Op {
+            case "-":
+                return lInt - rInt
+            case "*":
+                return lInt * rInt
+            case "/":
+                if rInt == 0 {
+                    e.genError("Division by zero!", expr.Position)
+                    return nil
+                }
+                return lInt / rInt
+            }
+        } else {
+            // Float math
+            switch expr.Op {
+            case "-":
+                return lFloat - rFloat
+            case "*":
+                return lFloat * rFloat
+            case "/":
+                if rFloat == 0 {
+                    e.genError("Division by zero!", expr.Position)
+                    return nil
+                }
+                return lFloat / rFloat
+            }
+        }
+    default:
+        return e.evalLogical(expr)
+    }
+    e.genError("Unknown", expr.Position)
+    return nil
 }
 
 func (e *Evaluator) evalUnary(node *UnaryOpNode) any {
-	value := e.eval(node.Expr)
-	if _, ok := value.(nilValue); ok {
-		e.genError("Value with unary shoundn't be nil!",
-			node.Position)
-		return nil
-	}
-	switch node.Op {
-	case "++", "--": {
-		if node.Op == "++" {
-			return e.handlePostfixPP(node)
-		} else {
-			return e.handlePostfixMM(node)
-		}
-	}
-	case "-":
-		// Negation for numbers
-		if v, ok := value.(int); ok {
-			return -v
-		}
-		e.genError(fmt.Sprintf(
-			"Unary '-' not supported for type %T", value),
-			node.Position)
-		return nil
-	case "!":
-		// Logical NOT for booleans
-		if v, ok := value.(bool); ok {
-			return !v
-		}
-		e.genError(fmt.Sprintf(
-			"Unary '!' not supported for type %T", value),
-			node.Position)
-		return nil
-	default:
-		return nil
-	}
+    value := e.eval(node.Expr)
+    if _, ok := value.(nilValue); ok {
+        e.genError("Value with unary shouldn't be nil!", node.Position)
+        return nil
+    }
+    switch node.Op {
+    case "++", "--":
+        if node.Op == "++" {
+            return e.handlePostfixPP(node)
+        } else {
+            return e.handlePostfixMM(node)
+        }
+    case "-":
+        // Negation for numbers int or float64
+        switch v := value.(type) {
+        case int:
+            return -v
+        case float64:
+            return -v
+        }
+        e.genError(fmt.Sprintf(
+            "Unary '-' not supported for type %T", value),
+            node.Position)
+        return nil
+    case "!":
+        // Logical NOT for booleans
+        if v, ok := value.(bool); ok {
+            return !v
+        }
+        e.genError(fmt.Sprintf(
+            "Unary '!' not supported for type %T", value),
+            node.Position)
+        return nil
+    default:
+        return nil
+    }
 }
 
 func (e *Evaluator) evalCondition(condition Node) any {

@@ -72,7 +72,8 @@ const (
 
     Comment
 
-    Digit
+    Int
+	Float
 )
 
 func (t TokenType) String() string {
@@ -183,8 +184,10 @@ func (t TokenType) String() string {
         return "Dot"
     case Comment:
         return "Comment"
-    case Digit:
-        return "Digit"
+    case Int:
+        return "Int"
+    case Float:
+        return "Float"
     default:
         return "Unknown"
     }
@@ -245,13 +248,33 @@ func (l *Lexer) Read(s string) ([]*Token, error) {
 		// Numbers
 		if unicode.IsDigit(ch) {
 			start := i
-			for i < length && unicode.IsDigit(l.source[i]) {
-				i++
-				l.currentColumn++
+			hasDot := false
+			for i < length {
+				c := l.source[i]
+				if unicode.IsDigit(c) {
+					i++
+					l.currentColumn++
+				} else if c == '.' && !hasDot {
+					// Check for decimal point if none encountered before
+					// Also, make sure next char is digit to avoid e.g. "12."
+					if i+1 < length && unicode.IsDigit(l.source[i+1]) {
+						hasDot = true
+						i++
+						l.currentColumn++
+					} else {
+						break
+					}
+				} else {
+					break
+				}
 			}
 			word := string(l.source[start:i])
-			tokens = append(tokens, l.genTokenAtPosition(word, Digit, l.currentLine, startColumn))
-			i--
+			if hasDot {
+				tokens = append(tokens, l.genTokenAtPosition(word, Float, l.currentLine, startColumn))
+			} else {
+				tokens = append(tokens, l.genTokenAtPosition(word, Int, l.currentLine, startColumn))
+			}
+			i--  // adjust for the for loop increment
 			continue
 		}
 

@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"unicode"
 )
 
 func (e *Evaluator) genError(msg string, pos Position) {
@@ -22,6 +23,8 @@ func (e *Evaluator) resolveType(value any, pos Position) string {
 		return "string"
 	case int:
 		return "int"
+	case float64:
+		return "float"
 	case bool:
 		return "bool"
 	case *Env:
@@ -36,3 +39,11 @@ func (e *Evaluator) resolveType(value any, pos Position) string {
 	}
 }
 
+func capitalizeFirstLetter(s string) string {
+    if len(s) == 0 {
+        return s
+    }
+    runes := []rune(s)
+    runes[0] = unicode.ToUpper(runes[0])
+    return string(runes)
+}

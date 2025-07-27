@@ -10,7 +10,7 @@ func (p *Parser) parseExpression(precedence int) Node {
 
     // Parse prefix (numbers, unary minus, parentheses)
     switch tok.TType {
-    case Digit:
+    case Int, Float:
 		left = p.parseDigit()
 	case Identifier:
 		left = p.parseIdentifier()

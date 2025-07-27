@@ -142,7 +142,13 @@ func (e *Env) AddStructSymbol(name string, structEnv *Env) {
 	}
 }
 
-func (e *Env) AddStructMethod(structName, methodName string, params []string, body []Node) int {
+func (e *Env) AddStructMethod(
+	structName,
+	methodName string,
+	params []string,
+	body []Node) int {
+	fmt.Println(fmt.Sprintf(
+		"Adding method %s to struct %s", methodName, structName))
 	for env := e; env != nil; env = env.Parent {
 		sym, exists := env.Symbols[structName]
 		if !exists {

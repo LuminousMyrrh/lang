@@ -1,36 +1,13 @@
-class Node {
-    pub value,
-    pub next = nil
-    pub prev = nil
+classd  test {
 }
 
-pub Node->setValue(x) {
-    self.value = x;
+pub test->string() {
+    return "test";
 }
 
 func main() {
-    var root = Node {
-        value: 0,
-    };
-
-    var i = 1;
-    var currNode = root;
-    var prevNode = currNode;
-    while (i < 10) {
-        prevNode = currNode;
-        currNode.next = Node {
-            value: i,
-            prev: prevNode
-        }
-        currNode = currNode.next
-        i += 1;
-    }
-
-    currNode = root;
-    while (currNode != nil) {
-        println("Value: ", currNode.value);
-        currNode = currNode.next;
-    }
+    var test = test{};
+    println(test.string());
 }
 
 main()

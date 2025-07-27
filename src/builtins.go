@@ -26,9 +26,9 @@ func builtinPrint(e *Evaluator, args []Node, pos Position) any {
 					)
                 return nil
             }
-            fmt.Print(decoded)
+            fmt.Println(decoded)
         } else {
-            fmt.Print(val)
+            fmt.Println(val)
         }
     }
     return 1
@@ -51,7 +51,6 @@ func builtinPrintln(e *Evaluator, args []Node, pos Position) any {
             fmt.Print(val)
         }
     }
-    fmt.Println()
     return 1
 }
 

@@ -48,7 +48,7 @@ func (p *Parser) parseStatement() Node {
 	}
 
 	switch p.currentToken().TType {
-	case Digit, LParen, Minus:
+	case Int, Float, LParen, Minus:
 		expr := p.parseExpression(0)
 
 		return expr

@@ -1,7 +1,10 @@
-import 
-
 func main() {
-    println("hello");
+    var x = 1.9823479823749823745;
+    if (type(x) == "float") {
+        print(x + 0.13);
+    } else {
+        print("No way");
+    }
 }
 
 main();
