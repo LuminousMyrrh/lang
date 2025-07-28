@@ -76,6 +76,26 @@ func (p *Parser) parseExpression(precedence int) Node {
 			Op:   op,
 			Expr: expr,
 		}
+	case True: {
+		tok := p.currentToken()
+		p.advance()
+		left = &TrueNode{
+			Position {
+				Row: tok.Line,
+				Column: tok.Column,
+			},
+		}
+	}
+	case False: {
+		tok := p.currentToken()
+		p.advance()
+		left = &FalseNode{
+			Position {
+				Row: tok.Line,
+				Column: tok.Column,
+			},
+		}
+	}
 	default:
 		p.genError(fmt.Sprintf("unexpected token in expression: %v", tok.Lexeme))
 		return nil

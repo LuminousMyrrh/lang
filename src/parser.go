@@ -97,7 +97,18 @@ func (p *Parser) parseStatement() Node {
 
 	case Return:
 		// skip 'return'
+		initTok := p.currentToken()
 		p.advance()
+		if p.currentToken().TType == Semicolon {
+			p.advance()
+			return &ReturnNode {
+				Position {
+					Row: initTok.Line,
+					Column: initTok.Column,
+				},
+				nil,
+			}
+		}
 		value := p.parseExpression(0)
 		// expecting to advace ';'
 		if p.currentToken().TType != Semicolon {
