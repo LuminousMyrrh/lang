@@ -68,12 +68,12 @@ func (e *Evaluator) evalAssignment(a *AssignmentNode) any {
 			switch curr := currentVal.(type) {
 			case int:
 				if val, ok := value.(int); ok {
-					e.currentEnv.UpdateSymbol(target.Name, curr+val)
+					e.currentEnv.UpdateSymbol(target.Name, curr+val, "int")
 					return curr + val
 				}
 			case string:
 				if val, ok := value.(string); ok {
-					e.currentEnv.UpdateSymbol(target.Name, curr+val)
+					e.currentEnv.UpdateSymbol(target.Name, curr+val, "string")
 					return curr + val
 				}
 			}
@@ -87,7 +87,7 @@ func (e *Evaluator) evalAssignment(a *AssignmentNode) any {
 			curr, ok1 := currentVal.(int)
 			val, ok2 := value.(int)
 			if ok1 && ok2 {
-				e.currentEnv.UpdateSymbol(target.Name, curr-val)
+				e.currentEnv.UpdateSymbol(target.Name, curr-val, "int")
 				return curr - val
 			}
 			e.genError(fmt.Sprintf(
@@ -97,7 +97,8 @@ func (e *Evaluator) evalAssignment(a *AssignmentNode) any {
 			return nil
 
 		case "=":
-			e.currentEnv.UpdateSymbol(target.Name, value)
+			e.currentEnv.UpdateSymbol(target.Name,
+				value, e.resolveType(value, target.Position))
 			return value
 
 		default:
@@ -153,7 +154,8 @@ func (e *Evaluator) evalAssignment(a *AssignmentNode) any {
             return nil
         }
         value := e.eval(a.Value)
-        instanceEnv.UpdateSymbol(target.MethodName, value)
+        instanceEnv.UpdateSymbol(target.MethodName,
+			value, e.resolveType(value, target.Position))
 		return value
 
 	case *ArrayAccessNode: {
@@ -218,7 +220,8 @@ func (e *Evaluator) evalAssignment(a *AssignmentNode) any {
 		}
 
 		// Store the grown array back in the environment
-		e.currentEnv.UpdateSymbol(arrIdent.Name, arr)
+		e.currentEnv.UpdateSymbol(arrIdent.Name, 
+			arr, e.resolveType(arr, a.Position))
 		return value
 	}
     default:

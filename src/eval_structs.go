@@ -91,7 +91,8 @@ func (e *Evaluator) evalStructInit(stmt *StructInitNode) any {
 				)
 			return nil
 		}
-        instanceEnv.UpdateSymbol(name.Name, val)
+        instanceEnv.UpdateSymbol(name.Name,
+			val, e.resolveType(val, assign.Position))
     }
 
     return instanceEnv

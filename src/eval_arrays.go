@@ -97,7 +97,8 @@ func (e *Evaluator) evalArrayAssign(stmt *ArrayAssign) any {
 	// Assign the value
 	val := e.eval(stmt.Value)
 	arr[index] = val
-	e.currentEnv.UpdateSymbol(stmt.Target.String(), arr)
+	e.currentEnv.UpdateSymbol(stmt.Target.String(),
+		arr, e.resolveType(arr, stmt.Position))
 
 	return nil
 }

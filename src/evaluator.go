@@ -60,7 +60,6 @@ func (e *Evaluator) eval(stmt Node) any {
 }
 
 func (e *Evaluator) evalX(stmt Node) any {
-	// fmt.Printf("Evaluating node: %T\n", stmt)
 
 	switch s := stmt.(type) {
 	case *VarDefNode:

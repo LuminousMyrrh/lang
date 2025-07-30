@@ -6,12 +6,10 @@ import (
 
 func (e *Evaluator) evalBinary(expr *BinaryOpNode) any {
 	left := e.eval(expr.Left)
-	fmt.Printf("Left: %v\n", left)
 	if ret, ok := left.(returnValue); ok {
 		left = ret.value
 	}
 	right := e.eval(expr.Right)
-	fmt.Printf("Right: %v\n", right)
 	if ret, ok := right.(returnValue); ok {
 		right = ret.value
 	}
@@ -341,7 +339,7 @@ func (e *Evaluator) handlePostfixPP(node *UnaryOpNode) any {
 
 	origVal := val
 
-	e.currentEnv.UpdateSymbol(ident.Name, intVal+1)
+	e.currentEnv.UpdateSymbol(ident.Name, intVal+1, "int")
 
 	return origVal
 }
@@ -364,7 +362,7 @@ func (e *Evaluator) handlePostfixMM(node *UnaryOpNode) any {
 
 	origVal := val
 
-	e.currentEnv.UpdateSymbol(ident.Name, intVal-1)
+	e.currentEnv.UpdateSymbol(ident.Name, intVal-1, "int")
 
 	return origVal
 }

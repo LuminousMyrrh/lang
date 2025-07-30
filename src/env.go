@@ -240,13 +240,20 @@ func (e *Env) RemoveSymbol(name string) {
 	delete(e.Symbols, name)
 }
 
-func (e *Env) UpdateSymbol(name string, newValue any) {
+func (e *Env) UpdateSymbol(name string, newValue any, newType string) {
 	for env := e; env != nil; env = env.Parent {
 		if sym, ok := env.Symbols[name]; ok {
 			if env.IsSymbolFunc(name) {
 				break
 			}
-			env.Symbols[name] = &VarSymbol{value: newValue, typeName: sym.Type()}
+			varType := sym.Type()
+			if len(newType) != 0 {
+				varType = newType
+			}
+			env.Symbols[name] = &VarSymbol{
+				value: newValue,
+				typeName: varType,
+			}
 		}
 	}
 }

@@ -76,7 +76,6 @@ func (e *Evaluator) evalFunctionCall(call *FunctionCallNode) any {
 		}
 
 		e.currentEnv = prevEnv
-		fmt.Printf("Function returns value: %v\n", result)
 		return result
 
 	}
