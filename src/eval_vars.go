@@ -30,16 +30,6 @@ func (e *Evaluator) evalIdentifier(id *IdentifierNode) any {
 
 	val :=  i.(Symbol).Value()
 
-    if instEnv, ok := val.(*Env); ok {
-        if instEnv.Parent != nil {
-            pName := instEnv.Parent.Type
-            if pName == "string" || pName == "int" || pName == "float" {
-                if valueSym, ok := instEnv.Symbols["value"]; ok {
-                    return valueSym.Value()
-                }
-            }
-        }
-    }
 	return val
 }
 

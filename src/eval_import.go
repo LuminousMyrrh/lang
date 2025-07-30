@@ -72,7 +72,6 @@ func (e *Evaluator) evalImport(stmt *ImportNode) any {
 
 		e.currentEnv.AddVarSymbol(
 			varName, structName, NewEnv(importEnv, structName))
-		fmt.Println(e.currentEnv.FindSymbol(varName))
 
 		return 1
 	} else {

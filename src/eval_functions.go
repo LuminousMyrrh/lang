@@ -65,7 +65,6 @@ func (e *Evaluator) evalFunctionCall(call *FunctionCallNode) any {
 		}
 
 		// 4. Evaluate the function body
-		// result := e.evalFuncBlock(f.Body)
 		var result any
 		for _, stmt := range f.Body.Statements {
 			result = e.eval(stmt)
