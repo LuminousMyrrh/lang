@@ -49,6 +49,17 @@ func (e *Evaluator) Eval(env *Env, entry *ProgramNode) {
 }
 
 func (e *Evaluator) eval(stmt Node) any {
+    // fmt.Printf("eval node type: %T\n", stmt)
+    res := e.evalX(stmt)  // actual dispatch
+    if _, ok := res.(returnValue); ok {
+        // fmt.Printf("eval returned returnValue wrapping: %v\n", ret.value)
+    } else {
+        //fmt.Printf("eval returned: %v\n", res)
+    }
+    return res
+}
+
+func (e *Evaluator) evalX(stmt Node) any {
 	// fmt.Printf("Evaluating node: %T\n", stmt)
 
 	switch s := stmt.(type) {

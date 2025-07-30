@@ -61,8 +61,6 @@ func (e *Evaluator) evalImport(stmt *ImportNode) any {
 		e.currentEnv.AddVarSymbol(
 			varName, structName, importEnv)
 
-		fmt.Println(importEnv)
-
 		return 1
 	} else {
 		for _, symbol := range stmt.Symbols {

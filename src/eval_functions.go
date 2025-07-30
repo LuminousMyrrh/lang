@@ -55,22 +55,28 @@ func (e *Evaluator) evalFunctionCall(call *FunctionCallNode) any {
 
 		// 2. Switch to the function's environment
 		prevEnv := e.currentEnv
-		callEnv := NewEnv(f.Env, "function")
+		callEnv := NewEnv(f.Env, ident.Name)
 		e.currentEnv = callEnv
 
 		// 3. Add parameters to the new environment
 		for i, val := range argValues {
-			e.currentEnv.AddVarSymbol(f.Params[i], "", val)
+			e.currentEnv.AddVarSymbol(f.Params[i],
+				e.resolveType(val, call.Position), val)
 		}
 
 		// 4. Evaluate the function body
-		result := e.evalFuncBlock(f.Body)
-		if ret, ok := result.(returnValue); ok {
-			return ret.value
+		// result := e.evalFuncBlock(f.Body)
+		var result any
+		for _, stmt := range f.Body.Statements {
+			result = e.eval(stmt)
+			if ret, ok := result.(returnValue); ok {
+				e.currentEnv = prevEnv
+				return ret.value
+			}
 		}
 
 		e.currentEnv = prevEnv
-
+		fmt.Printf("Function returns value: %v\n", result)
 		return result
 
 	}
@@ -79,12 +85,13 @@ func (e *Evaluator) evalFunctionCall(call *FunctionCallNode) any {
 }
 
 func (e *Evaluator) evalFuncBlock(block *BlockNode) any {
+	var result any
 	for _, stmt := range block.Statements {
-		result := e.eval(stmt)
+		result = e.eval(stmt)
 		if ret, ok := result.(returnValue); ok {
 			return ret
 		}
 	}
-	return nil
+	return result
 }
 

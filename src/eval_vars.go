@@ -3,7 +3,7 @@ package main
 import ("fmt")
 
 func (e *Evaluator) evalVarDef(stmt *VarDefNode) any {
-	if e.currentEnv.SymbolExistsInCurrent(stmt.Name) {
+	if e.currentEnv.SymbolExists(stmt.Name) {
 		e.genError(fmt.Sprintf(
 			"Var '%s' already exists", stmt.Name),
 			stmt.Position)
@@ -154,7 +154,7 @@ func (e *Evaluator) evalAssignment(a *AssignmentNode) any {
         }
         value := e.eval(a.Value)
         instanceEnv.UpdateSymbol(target.MethodName, value)
-        return 1
+		return value
 
 	case *ArrayAccessNode: {
 		// Unwrap the identifier

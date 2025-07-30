@@ -5,8 +5,16 @@ import (
 )
 
 func (e *Evaluator) evalBinary(expr *BinaryOpNode) any {
-    left := e.eval(expr.Left)
-    right := e.eval(expr.Right)
+	left := e.eval(expr.Left)
+	fmt.Printf("Left: %v\n", left)
+	if ret, ok := left.(returnValue); ok {
+		left = ret.value
+	}
+	right := e.eval(expr.Right)
+	fmt.Printf("Right: %v\n", right)
+	if ret, ok := right.(returnValue); ok {
+		right = ret.value
+	}
 
     switch expr.Op {
     case "+":

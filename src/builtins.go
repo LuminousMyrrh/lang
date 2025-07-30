@@ -31,7 +31,7 @@ func builtinPrint(e *Evaluator, args []Node, pos Position) any {
             fmt.Println(val)
         }
     }
-    return 1
+    return nilValue{}
 }
 
 func builtinPrintln(e *Evaluator, args []Node, pos Position) any {
@@ -51,7 +51,7 @@ func builtinPrintln(e *Evaluator, args []Node, pos Position) any {
             fmt.Print(val)
         }
     }
-    return 1
+    return nilValue{}
 }
 
 func builtinType(e *Evaluator, args []Node, pos Position) any {

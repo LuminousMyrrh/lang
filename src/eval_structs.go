@@ -133,7 +133,8 @@ func (e *Evaluator) evalStructMethodCall(structEnv *Env,
     callEnv := NewEnv(structEnv, "function")
     callEnv.AddVarSymbol("self", structEnv.Type, structEnv)
     for i, val := range args {
-        callEnv.AddVarSymbol(method.Params[i], "", val)
+        callEnv.AddVarSymbol(method.Params[i],
+			e.resolveType(val, method.Body.Position), val)
     }
     prevEnv := e.currentEnv
     e.currentEnv = callEnv
@@ -146,7 +147,6 @@ func (e *Evaluator) evalStructMethodCall(structEnv *Env,
 }
 
 func (e *Evaluator) evalStructMemberAccess(stmt *StructMethodCall) any {
-	fmt.Println(e.currentEnv)
     // Get the variable holding the struct instance
 	callerIdent, ok := stmt.Caller.(*IdentifierNode)
 	if !ok {

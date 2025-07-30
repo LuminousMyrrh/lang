@@ -1,13 +1,17 @@
-classd  test {
-}
-
-pub test->string() {
-    return "test";
+func fac(n) {
+    print(n);
+    if (n == 1) {
+        return 1;
+    }
+    var subResult = fac(n - 1);
+    print(subResult);
+    var res = subResult * n;
+    print(res);
+    return res;
 }
 
 func main() {
-    var test = test{};
-    println(test.string());
+    print(fac(5));
 }
 
 main()

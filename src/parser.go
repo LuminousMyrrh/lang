@@ -181,8 +181,6 @@ func (p *Parser) parseIf() *IfNode {
     p.advance() // consume '('
 
 	condition := p.parseExpression(0)
-	fmt.Println("Token: ", p.currentToken().Lexeme)
-	fmt.Println(condition)
 
     if p.currentToken().TType != RParen {
         p.genError("Expected ')' after if condition")

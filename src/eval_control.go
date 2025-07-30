@@ -7,7 +7,7 @@ func (e *Evaluator) evalBlock(block *BlockNode) any {
 	var result any
 	for _, stmt := range block.Statements {
 		result = e.eval(stmt)
-		if _, ok := stmt.(*ReturnNode); ok {
+		if _, ok := result.(returnValue); ok {
 			e.currentEnv = prevEnv
 			return result
 		}
@@ -17,17 +17,25 @@ func (e *Evaluator) evalBlock(block *BlockNode) any {
 }
 
 func (e *Evaluator) evalIf(stmt *IfNode) any {
-	cond := e.evalCondition(stmt.Condition)
-	if cond == nil {
-		return nil
-	}
-	if cond == true && stmt.ThenBranch != nil {
-		return e.eval(stmt.ThenBranch)
-	} else if stmt.ElseBranch != nil {
-		return e.eval(stmt.ElseBranch)
-	} else {
-		return 0
-	}
+    cond := e.evalCondition(stmt.Condition)
+    if cond == nil {
+        return nil
+    }
+    if cond == true && stmt.ThenBranch != nil {
+        res := e.eval(stmt.ThenBranch)
+        if ret, ok := res.(returnValue); ok {
+            return ret
+        }
+        return res
+    } else if stmt.ElseBranch != nil {
+        res := e.eval(stmt.ElseBranch)
+        if ret, ok := res.(returnValue); ok {
+            return ret
+        }
+        return res
+    } else {
+        return nil
+    }
 }
 
 func (e *Evaluator) evalWhile(stmt *WhileNode) any {
@@ -98,8 +106,8 @@ func (e *Evaluator) evalFor(stmt *ForNode) any {
 }
 
 func (e *Evaluator) evalReturn(ret *ReturnNode) any {
-	val := e.eval(ret.Value)
-	return returnValue{val}
+    val := e.eval(ret.Value)
+    return returnValue{val}
 }
 
 func (e *Evaluator) evalLoopBlock(block *BlockNode) any {
