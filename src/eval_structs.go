@@ -2,6 +2,51 @@ package main
 
 import ("fmt")
 
+func (e *Evaluator) initBuiltintClasses() {
+	stringEnv := NewEnv(nil, "string")
+	stringEnv.AddVarSymbol(
+		"value",
+		"string",
+		nil)
+	e.currentEnv.AddStructSymbol("string", stringEnv)
+	
+
+	intEnv := NewEnv(nil, "int")
+	intEnv.AddVarSymbol(
+		"value",
+		"int",
+		nil)
+	e.currentEnv.AddStructSymbol("int", intEnv)
+
+	floatEnv := NewEnv(nil, "float")
+	floatEnv.AddVarSymbol(
+		"value",
+		"float",
+		nil)
+	e.currentEnv.AddStructSymbol("float", floatEnv)
+}
+
+func (e *Evaluator) initBuiltintMethods() int {
+	stringEnv := e.currentEnv.FindStructSymbol("string")
+	if stringEnv != nil {
+		stringEnv.Symbols["substring"] = &FuncSymbol{
+			NaviteFn: stringSubstring,
+			TypeName: "string",
+		}
+		stringEnv.Symbols["capitalize"] = &FuncSymbol{
+			NaviteFn: stringCapitalize,
+			TypeName: "string",
+		}
+		stringEnv.Symbols["contains"] = &FuncSymbol{
+			NaviteFn: stringContains,
+			TypeName: "string",
+		}
+	} else {
+		return -1
+	}
+	return 0
+}
+
 func (e *Evaluator) evalStructDef(stmt *StructDefNode) any {
 	structEnv := NewEnv(e.currentEnv, stmt.Name)
 
@@ -37,12 +82,18 @@ func (e *Evaluator) evalStructMethodDef(stmt *StructMethodDef) any {
 		return nil
 	}
 
-	e.currentEnv.AddStructMethod(
+	if e.currentEnv.AddStructMethod(
 		stmt.StructName,
 		stmt.MethodName,
 		stmt.Parameters,
 		stmt.Body.Statements,
-		)
+		nil,
+		) == -1 {
+		e.genError(fmt.Sprintf(
+			"Method '%s' already exists in class '%s'",
+			stmt.MethodName, stmt.StructName), stmt.Position)
+		return nil
+	}
 
 	return structEnv
 }
@@ -98,11 +149,13 @@ func (e *Evaluator) evalStructInit(stmt *StructInitNode) any {
     return instanceEnv
 }
 
-func (e *Evaluator) evalStructMethodCall(structEnv *Env,
+func (e *Evaluator) evalStructMethodCall(
+	self *Env,
 	methodName string,
 	args []any,
 	pos Position) any {
-    if structEnv.Parent == nil {
+
+    if self.Parent == nil {
         e.genError(fmt.Sprintf(
 			"Struct type environment for method '%s' not found",
 			methodName),
@@ -110,7 +163,7 @@ func (e *Evaluator) evalStructMethodCall(structEnv *Env,
 			)
         return nil
     }
-    methodSym, ok := structEnv.Parent.Symbols[methodName]
+    methodSym, ok := self.Parent.Symbols[methodName]
     if !ok {
         e.genError(fmt.Sprintf(
 			"Method '%s' not found in struct",
@@ -123,16 +176,22 @@ func (e *Evaluator) evalStructMethodCall(structEnv *Env,
         e.genError(fmt.Sprintf("'%s' is not a method", methodName), pos)
         return nil
     }
-    if len(args) != len(method.Params) {
-        e.genError(fmt.Sprintf(
+
+	if method.NaviteFn != nil {
+		return method.NaviteFn(e, self, args, pos)
+	}
+
+	if len(args) != len(method.Params) {
+		e.genError(fmt.Sprintf(
 			"Method '%s' expects %d args, got %d",
 			methodName,
 			len(method.Params),
 			len(args)), pos)
         return nil
     }
-    callEnv := NewEnv(structEnv, "function")
-    callEnv.AddVarSymbol("self", structEnv.Type, structEnv)
+    callEnv := NewEnv(self, "function")
+    callEnv.AddVarSymbol("self", self.Type, self)
+
     for i, val := range args {
         callEnv.AddVarSymbol(method.Params[i],
 			e.resolveType(val, method.Body.Position), val)

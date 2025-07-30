@@ -38,7 +38,8 @@ func (e *Evaluator) Eval(env *Env, entry *ProgramNode) {
 		"readAll": builtinReadAll,
 		"write":   builtinWrite,
 	}
-
+	e.initBuiltintClasses()
+	e.initBuiltintMethods()
 
 	for _, stmt := range entry.Nodes{
 		if val := e.eval(stmt); val == nil {

@@ -16,7 +16,7 @@ func decodeEscapeSequences(input string) (string, error) {
 
 func builtinPrint(e *Evaluator, args []Node, pos Position) any {
     for _, arg := range args {
-        val := e.eval(arg)
+        val := unwrapBuiltinValue(e.eval(arg))
         if s, ok := val.(string); ok {
             decoded, err := decodeEscapeSequences(s)
             if err != nil {
@@ -26,17 +26,18 @@ func builtinPrint(e *Evaluator, args []Node, pos Position) any {
 					)
                 return nil
             }
-            fmt.Println(decoded)
+            fmt.Print(decoded)
         } else {
-            fmt.Println(val)
+            fmt.Print(val)
         }
     }
+	fmt.Println()
     return nilValue{}
 }
 
 func builtinPrintln(e *Evaluator, args []Node, pos Position) any {
     for _, arg := range args {
-        val := e.eval(arg)
+        val := unwrapBuiltinValue(e.eval(arg))
         if s, ok := val.(string); ok {
             decoded, err := decodeEscapeSequences(s)
             if err != nil {
@@ -59,7 +60,7 @@ func builtinType(e *Evaluator, args []Node, pos Position) any {
         e.genError("type: expects one argument", pos)
         return nil
     }
-    val := e.eval(args[0])
+	val := unwrapBuiltinValue(e.eval(args[0]))
     return e.resolveType(val, pos)
 }
 
@@ -69,7 +70,7 @@ func builtinInput(e *Evaluator, args []Node, pos Position) any {
         return nil
     }
     if len(args) == 1 {
-        fmt.Print(e.eval(args[0]))
+        fmt.Print(unwrapBuiltinValue(e.eval(args[0])))
     }
     var input string
     fmt.Scanln(&input)
@@ -81,7 +82,7 @@ func builtinInt(e *Evaluator, args []Node, pos Position) any {
         e.genError("atoi: expects one argument", pos)
         return nil
     }
-    val := e.eval(args[0])
+	val := unwrapBuiltinValue(e.eval(args[0]))
 	switch s := val.(type) {
 	case string:
 		result, err := strconv.Atoi(s)
@@ -106,7 +107,7 @@ func builtinFloat(e *Evaluator, args []Node, pos Position) any {
         e.genError("float: expects one argument", pos)
         return nil
     }
-    val := e.eval(args[0])
+	val := unwrapBuiltinValue(e.eval(args[0]))
 	switch s := val.(type) {
 	case string:
 		result, err := strconv.ParseFloat(s, 64)
@@ -131,7 +132,7 @@ func builtinString(e *Evaluator, args []Node, pos Position) any {
         e.genError("itoa: expects one argument", pos)
         return nil
     }
-    val := e.eval(args[0])
+	val := unwrapBuiltinValue(e.eval(args[0]))
 	switch v := val.(type) {
 	case int:
 		return strconv.Itoa(v)
@@ -150,11 +151,14 @@ func builtinLen(e *Evaluator, args []Node, pos Position) any {
         e.genError("len: expects one argument", pos)
         return nil
     }
-    arr := e.eval(args[0])
-    if a, ok := arr.([]any); ok {
-        return len(a)
-    }
-    e.genError("len: argument must be array", pos)
+    arr := unwrapBuiltinValue(e.eval(args[0]))
+	switch a := arr.(type) {
+	case []any:
+		return len(a)
+	case string:
+		return len(a)
+	}
+    e.genError("len: argument must be array/string", pos)
     return nil
 }
 
@@ -215,3 +219,4 @@ func builtinWrite(e *Evaluator, args []Node, pos Position) any {
 		return nil
 	}
 }
+

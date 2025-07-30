@@ -27,7 +27,20 @@ func (e *Evaluator) evalIdentifier(id *IdentifierNode) any {
 			id.Position)
 		return nil
 	}
-	return i.(Symbol).Value()
+
+	val :=  i.(Symbol).Value()
+
+    if instEnv, ok := val.(*Env); ok {
+        if instEnv.Parent != nil {
+            pName := instEnv.Parent.Type
+            if pName == "string" || pName == "int" || pName == "float" {
+                if valueSym, ok := instEnv.Symbols["value"]; ok {
+                    return valueSym.Value()
+                }
+            }
+        }
+    }
+	return val
 }
 
 func (e *Evaluator) evalAssignment(a *AssignmentNode) any {
@@ -61,7 +74,7 @@ func (e *Evaluator) evalAssignment(a *AssignmentNode) any {
 			return nil
 		}
 
-		currentVal := sym.Value()
+		currentVal := unwrapBuiltinValue(sym.Value())
 
 		switch a.Op {
 		case "+=":

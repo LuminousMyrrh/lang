@@ -8,7 +8,7 @@ func (e *Evaluator) evalArray(arr *ArrayNode) any {
 	var values []any
 
 	for _, el := range arr.Elements {
-		values = append(values, e.eval(el))
+		values = append(values, unwrapBuiltinValue(e.eval(el)))
 	}
 
 	return values;
@@ -16,14 +16,14 @@ func (e *Evaluator) evalArray(arr *ArrayNode) any {
 
 func (e *Evaluator) evalArrayAccess(stmt *ArrayAccessNode) any {
 	// Recursively evaluate the target to get the array value
-	arr := e.eval(stmt.Target)
+	arr := unwrapBuiltinValue(e.eval(stmt.Target))
 	if arr == nil {
 		e.genError("Array does not exist", stmt.Position)
 		return nil
 	}
 
 	// Evaluate the index expression
-	idx := e.eval(stmt.Index)
+	idx := unwrapBuiltinValue(e.eval(stmt.Index))
 	i, ok := idx.(int)
 	if !ok {
 		e.genError("Array index must be an integer", stmt.Position)
@@ -31,21 +31,31 @@ func (e *Evaluator) evalArrayAccess(stmt *ArrayAccessNode) any {
 	}
 
 	// Check if arr is actually an array
-	a, ok := arr.([]any)
-	if !ok {
+	switch a := arr.(type) {
+	case []any: {
+		if i < 0 || i >= len(a) {
+			e.genError(fmt.Sprintf("Index %d out of bounds", i),
+				stmt.Position)
+			return nil
+		}
+		return a[i]
+	}
+	case string: {
+		runes := []rune(a)
+		if i < 0 || i >= len(runes) {
+			e.genError(fmt.Sprintf("Index %d out of bounds", i), stmt.Position)
+			return nil
+		}
+		return string(runes[i])
+	}
+	default:
 		e.genError(fmt.Sprintf(
 			"Target has incorrect type. It should be array: %T",
 			a,
 			), stmt.Position)
 		return nil
 	}
-	if i < 0 || i >= len(a) {
-		e.genError(fmt.Sprintf("Index %d out of bounds", i),
-			stmt.Position)
-		return nil
-	}
 
-	return a[i]
 }
 
 func (e *Evaluator) evalArrayAssign(stmt *ArrayAssign) any {
@@ -64,8 +74,8 @@ func (e *Evaluator) evalArrayAssign(stmt *ArrayAssign) any {
 				continue
 			}
 			// Now, access.Target is the base IdentifierNode
-			parent = e.eval(access.Target)
-			idx := e.eval(access.Index)
+			parent = unwrapBuiltinValue(e.eval(access.Target))
+			idx := unwrapBuiltinValue(e.eval(access.Index))
 			index, ok = idx.(int)
 			if !ok {
 				e.genError("Array index must be an integer",
@@ -95,7 +105,7 @@ func (e *Evaluator) evalArrayAssign(stmt *ArrayAssign) any {
 	}
 
 	// Assign the value
-	val := e.eval(stmt.Value)
+	val := unwrapBuiltinValue(e.eval(stmt.Value))
 	arr[index] = val
 	e.currentEnv.UpdateSymbol(stmt.Target.String(),
 		arr, e.resolveType(arr, stmt.Position))

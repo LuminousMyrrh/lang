@@ -5,11 +5,11 @@ import (
 )
 
 func (e *Evaluator) evalBinary(expr *BinaryOpNode) any {
-	left := e.eval(expr.Left)
+	left := unwrapBuiltinValue(e.eval(expr.Left))
 	if ret, ok := left.(returnValue); ok {
 		left = ret.value
 	}
-	right := e.eval(expr.Right)
+	right := unwrapBuiltinValue(e.eval(expr.Right))
 	if ret, ok := right.(returnValue); ok {
 		right = ret.value
 	}
@@ -128,7 +128,7 @@ func (e *Evaluator) evalBinary(expr *BinaryOpNode) any {
 }
 
 func (e *Evaluator) evalUnary(node *UnaryOpNode) any {
-    value := e.eval(node.Expr)
+    value := unwrapBuiltinValue(e.eval(node.Expr))
     if _, ok := value.(nilValue); ok {
         e.genError("Value with unary shouldn't be nil!", node.Position)
         return nil
@@ -180,6 +180,8 @@ func (e *Evaluator) evalCondition(condition Node) any {
 		return e.evalLiteral(t)
 	case *NilNode:
 		return nil
+	case *StructMethodCall:
+		return e.evalStructMemberAccess(t)
 	default:
 		e.genError(fmt.Sprintf(
 			"Unsupported type: %T", condition),
@@ -189,6 +191,15 @@ func (e *Evaluator) evalCondition(condition Node) any {
 }
 
 func (e *Evaluator) evalLiteral(lit *LiteralNode) any {
+	if e.resolveType(lit.Value, lit.Position) == "string" {
+		stringEnv := e.currentEnv.FindStructSymbol("string")
+		if stringEnv == nil {
+			return nil
+		}
+		instEnv := NewEnv(stringEnv, "string")
+		instEnv.AddVarSymbol("value", "string", lit.Value)
+		return instEnv
+	}
 	return lit.Value
 }
 
@@ -203,7 +214,7 @@ func (e *Evaluator) evalFalse() any {
 func (e *Evaluator) evalLogical(node *BinaryOpNode) any {
 	switch node.Op {
 	case "&&": {
-		left := e.eval(node.Left)
+		left := unwrapBuiltinValue(e.eval(node.Left))
 		lBool, ok := left.(bool)
 		if !ok {
 			e.genError(fmt.Sprintf(
@@ -215,7 +226,7 @@ func (e *Evaluator) evalLogical(node *BinaryOpNode) any {
 			return false
 		}
 
-		right := e.eval(node.Right)
+		right := unwrapBuiltinValue(e.eval(node.Right))
 		rBool, ok := right.(bool)
 		if !ok {
 			e.genError(fmt.Sprintf(
@@ -227,7 +238,7 @@ func (e *Evaluator) evalLogical(node *BinaryOpNode) any {
 
 	}
 	case "||": {
-		left := e.eval(node.Left)
+		left := unwrapBuiltinValue(e.eval(node.Left))
 		lBool, ok := left.(bool)
 		if !ok {
 			e.genError(fmt.Sprintf(
@@ -239,7 +250,7 @@ func (e *Evaluator) evalLogical(node *BinaryOpNode) any {
 			// Short-circuit: true || _ == true
 			return true
 		}
-		right := e.eval(node.Right)
+		right := unwrapBuiltinValue(e.eval(node.Right))
 		rBool, ok := right.(bool)
 		if !ok {
 			e.genError(fmt.Sprintf(
@@ -250,8 +261,8 @@ func (e *Evaluator) evalLogical(node *BinaryOpNode) any {
 		return rBool
 	}
 	}
-	left := e.eval(node.Left)
-	right := e.eval(node.Right)
+	left := unwrapBuiltinValue(e.eval(node.Left))
+	right := unwrapBuiltinValue(e.eval(node.Right))
 
 	switch node.Op {
 	case ">", "<", ">=", "<=":

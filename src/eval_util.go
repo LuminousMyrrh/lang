@@ -47,3 +47,17 @@ func capitalizeFirstLetter(s string) string {
     runes[0] = unicode.ToUpper(runes[0])
     return string(runes)
 }
+
+func unwrapBuiltinValue(v any) any {
+    if instEnv, ok := v.(*Env); ok {
+        if instEnv.Parent != nil {
+            pName := instEnv.Parent.Type
+            if pName == "string" || pName == "int" || pName == "float" {
+                if valueSym, ok := instEnv.Symbols["value"]; ok {
+                    return valueSym.Value()
+                }
+            }
+        }
+    }
+    return v
+}

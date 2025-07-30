@@ -97,7 +97,7 @@ func (p *Parser) parseExpression(precedence int) Node {
 		}
 	}
 	default:
-		p.genError(fmt.Sprintf("unexpected token in expression: %v", tok.Lexeme))
+		p.genError(fmt.Sprintf("Unexpected token in expression: %v", tok.Lexeme))
 		return nil
 	}
 
