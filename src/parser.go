@@ -75,7 +75,7 @@ func (p *Parser) parseStatement() Node {
 		node := p.parseIdentifier()
 		return node
 	}
-	case StringTok: {
+	case StringTok, EmptyStringTok: {
 		node := p.parseString()
 		return node
 	}

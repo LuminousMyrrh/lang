@@ -13,6 +13,9 @@ func (e *Evaluator) evalBinary(expr *BinaryOpNode) any {
 	if ret, ok := right.(returnValue); ok {
 		right = ret.value
 	}
+	if (left == nil || right == nil) {
+		return nil
+	}
 
     switch expr.Op {
     case "+":

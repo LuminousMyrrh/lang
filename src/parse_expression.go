@@ -14,7 +14,7 @@ func (p *Parser) parseExpression(precedence int) Node {
 		left = p.parseDigit()
 	case Identifier:
 		left = p.parseIdentifier()
-	case StringTok:
+	case StringTok, EmptyStringTok:
 		left = p.parseString()
     case LParen:
         p.advance()

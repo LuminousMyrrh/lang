@@ -22,6 +22,7 @@ const (
     Return
     Identifier
     StringTok  // renamed from String to StringTok to avoid conflict with built-in type
+	EmptyStringTok
 
     Import
     Private
@@ -106,6 +107,8 @@ func (t TokenType) String() string {
         return "Identifier"
     case StringTok:
         return "String"
+	case EmptyStringTok:
+        return "EmptyString"
     case Import:
         return "Import"
     case Private:
@@ -278,10 +281,9 @@ func (l *Lexer) Read(s string) ([]*Token, error) {
 			continue
 		}
 
-		// Handle strings
 		if ch == '"' {
-			i++             // move past initial quote
-			l.currentColumn++ // initial quote counts as one column
+			i++              
+			l.currentColumn++
 			var str []rune
 
 			for i < length {
@@ -302,7 +304,6 @@ func (l *Lexer) Read(s string) ([]*Token, error) {
 					nextChar := l.source[i+1]
 					switch nextChar {
 					case '"', '\\', 'n', 't', 'r':
-						// For simplicity, just add the escaped char literally
 						if nextChar == 'n' {
 							str = append(str, '\n')
 						} else if nextChar == 't' {
@@ -326,9 +327,13 @@ func (l *Lexer) Read(s string) ([]*Token, error) {
 			if i >= length || l.source[i] != '"' {
 				return tokens, fmt.Errorf("unterminated string literal at line %d, column %d", l.currentLine, l.currentColumn)
 			}
-			// Consume closing quote
 			l.currentColumn++
-			tokens = append(tokens, l.genTokenAtPosition(string(str), StringTok, l.currentLine, startColumn))
+
+			if len(str) == 0 {
+				tokens = append(tokens, l.genTokenAtPosition("", EmptyStringTok, l.currentLine, startColumn))
+			} else {
+				tokens = append(tokens, l.genTokenAtPosition(string(str), StringTok, l.currentLine, startColumn))
+			}
 			continue
 		}
 

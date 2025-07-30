@@ -1,0 +1,21 @@
+func is_palindrome(s) {
+    var rev = "";
+    var i = len(s) - 1;
+    while (i >= 0) {
+        rev = rev + s[i];
+        i = i - 1;
+    }
+
+    if (rev == s) {
+        print(s + " is a palindrome!");
+    } else {
+        print(s + " is not a palindrome!");
+    }
+}
+
+func main() {
+    var word = "racecar";
+    is_palindrome(word);
+}
+
+main();

@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"unicode"
 )
@@ -43,7 +44,10 @@ func stringSubstring(e *Evaluator, self *Env, args []any, pos Position) any {
 		return nil
 	}
 	if from < 0 || to >= len(s) || from > to {
-		e.genError("substring: invalid indices", pos)
+		e.genError(fmt.Sprintf(
+			"substring: invalid indices '%d and %d' with length %d",
+			from, to, len(s)),
+			pos)
 		return nil
 	}
 	return s[from : to+1]
