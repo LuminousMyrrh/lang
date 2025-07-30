@@ -1,4 +1,7 @@
-# Simple, not-production ready (and ever will be) interpreted programming language
+# Lang - interpreted scripting language
+- Simple
+- Not-production ready (and ever will be)
+- Interpreted and script yeah
 
 # Features
 - Functions
