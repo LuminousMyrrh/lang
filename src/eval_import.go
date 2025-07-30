@@ -39,27 +39,28 @@ func (e *Evaluator) evalImport(stmt *ImportNode) any {
 	if len(stmt.Symbols) == 0 { 
 
 		// Utils
-		structName := capitalizeFirstLetter(stmt.File)
+		// structName := capitalizeFirstLetter(stmt.File)
 
-		// utils
-		varName := stmt.File
+		// // utils
+		// varName := stmt.File
 
-		importEnv := NewEnv(e.currentEnv, structName)
-		e.currentEnv.AddStructSymbol(structName, importEnv)
+		// importEnv := NewEnv(e.currentEnv, structName)
+		// e.currentEnv.AddStructSymbol(structName, importEnv)
 
 		for _, stmt := range mnode.Nodes {
-			if def, ok := stmt.(*FunctionDefNode); ok {
-				e.currentEnv.AddStructMethod(
-					structName,
-					def.Name,
-					def.Parameters,
-					def.Body.Statements,
-					)
-			}
+			e.eval(stmt)
+			// if def, ok := stmt.(*FunctionDefNode); ok {
+			// 	e.currentEnv.AddStructMethod(
+			// 		structName,
+			// 		def.Name,
+			// 		def.Parameters,
+			// 		def.Body.Statements,
+			// 		)
+			// }
 		}
 
-		e.currentEnv.AddVarSymbol(
-			varName, structName, importEnv)
+		// e.currentEnv.AddVarSymbol(
+		// 	varName, structName, importEnv)
 
 		return 1
 	} else {

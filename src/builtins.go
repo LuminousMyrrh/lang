@@ -76,37 +76,73 @@ func builtinInput(e *Evaluator, args []Node, pos Position) any {
     return input
 }
 
-func builtinAtoi(e *Evaluator, args []Node, pos Position) any {
+func builtinInt(e *Evaluator, args []Node, pos Position) any {
     if len(args) != 1 {
         e.genError("atoi: expects one argument", pos)
         return nil
     }
     val := e.eval(args[0])
-    str, ok := val.(string)
-    if !ok {
-        e.genError("atoi: argument must be string", pos)
-        return nil
-    }
-    result, err := strconv.Atoi(str)
-    if err != nil {
-        e.genError("atoi: invalid string format", pos)
-        return nil
-    }
-    return result
+	switch s := val.(type) {
+	case string:
+		result, err := strconv.Atoi(s)
+		if err != nil {
+			e.genError("int: invalid string format", pos)
+			return nil
+		}
+		return result
+	case float64:
+		return int(s)
+	case int:
+		return s
+	default:
+		e.genError(fmt.Sprintf(
+			"Unsupported type: %T", s), pos)
+		return nil
+	}
 }
 
-func builtinItoa(e *Evaluator, args []Node, pos Position) any {
+func builtinFloat(e *Evaluator, args []Node, pos Position) any {
+    if len(args) != 1 {
+        e.genError("float: expects one argument", pos)
+        return nil
+    }
+    val := e.eval(args[0])
+	switch s := val.(type) {
+	case string:
+		result, err := strconv.ParseFloat(s, 64)
+		if err != nil {
+			e.genError("int: invalid string format", pos)
+			return nil
+		}
+		return result
+	case int:
+		return float64(s)
+	case float64:
+		return s
+	default:
+		e.genError(fmt.Sprintf(
+			"Unsupported type: %T", s), pos)
+		return nil
+	}
+}
+
+func builtinString(e *Evaluator, args []Node, pos Position) any {
     if len(args) != 1 {
         e.genError("itoa: expects one argument", pos)
         return nil
     }
     val := e.eval(args[0])
-    i, ok := val.(int)
-    if !ok {
-        e.genError("itoa: argument must be int", pos)
-        return nil
-    }
-    return strconv.Itoa(i)
+	switch v := val.(type) {
+	case int:
+		return strconv.Itoa(v)
+	case float64:
+		return strconv.FormatFloat(v, 'g', -1, 64)
+	case string:
+		return v
+	default:
+		e.genError(fmt.Sprintf("Unsupported type: %T", v), pos)
+		return nil
+	}
 }
 
 func builtinLen(e *Evaluator, args []Node, pos Position) any {

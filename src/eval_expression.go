@@ -22,7 +22,7 @@ func (e *Evaluator) evalBinary(expr *BinaryOpNode) any {
             case int:
                 return l + r
             case float64:
-                return float64(l) + r
+                return float64(l) + float64(r)
             default:
                 e.genError(
                     "Right operand of '+' must be int or float64 if left is int",
@@ -32,7 +32,7 @@ func (e *Evaluator) evalBinary(expr *BinaryOpNode) any {
         case float64:
             switch r := right.(type) {
             case int:
-                return l + float64(r)
+                return float64(l) + float64(r)
             case float64:
                 return l + r
             default:
