@@ -13,7 +13,7 @@
 # Plan
 - [ ] fix inputs
     - currently it just reads imported file to current global env
-    - [ ] full file import
+    - [x] full file import
     - [ ] selective import
     - [ ] aliases
 - [ ] make strings interatable automatically
