@@ -48,6 +48,11 @@ func (e *Evaluator) initBuiltintMethods() int {
 }
 
 func (e *Evaluator) evalStructDef(stmt *StructDefNode) any {
+	if (e.currentEnv.SymbolExists(stmt.Name)) {
+		e.genError(fmt.Sprintf(
+			"Class '%s' already exists", stmt.Name), stmt.Position)
+		return nil
+	}
 	structEnv := NewEnv(e.currentEnv, stmt.Name)
 
 	for _, field := range stmt.Fields {

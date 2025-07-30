@@ -52,7 +52,7 @@ type VarSymbol struct {
 	typeName string
 }
 
-func (v *VarSymbol) String() string { return fmt.Sprintf("Var: %v", v.value) }
+func (v *VarSymbol) String() string { return fmt.Sprintf("Var value: %v\n", v.value) }
 func (v *VarSymbol) Value() any     { return v.value }
 func (v *VarSymbol) Type() string   { return v.typeName }
 
@@ -77,7 +77,7 @@ func NewEnv(parent *Env, envType string) *Env {
 func (e *Env) String() string {
 	var lines []string
 	for name, val := range e.Symbols {
-		lines = append(lines, fmt.Sprintf("Name: %s; Type(%T): %v", name, val, val.String()))
+		lines = append(lines, fmt.Sprintf("%s(%T) -> %v\n", name, val, val.String()))
 	}
 	return strings.Join(lines, "\n")
 }

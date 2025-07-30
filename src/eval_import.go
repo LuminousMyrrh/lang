@@ -39,28 +39,40 @@ func (e *Evaluator) evalImport(stmt *ImportNode) any {
 	if len(stmt.Symbols) == 0 { 
 
 		// Utils
-		// structName := capitalizeFirstLetter(stmt.File)
+		structName := capitalizeFirstLetter(stmt.File)
 
-		// // utils
-		// varName := stmt.File
+		// utils
+		varName := stmt.File
 
-		// importEnv := NewEnv(e.currentEnv, structName)
-		// e.currentEnv.AddStructSymbol(structName, importEnv)
+		importEnv := NewEnv(e.currentEnv, structName)
+		e.currentEnv.AddStructSymbol(structName, importEnv)
+		prevEnv := e.currentEnv
+		e.currentEnv = importEnv
 
 		for _, stmt := range mnode.Nodes {
-			e.eval(stmt)
-			// if def, ok := stmt.(*FunctionDefNode); ok {
-			// 	e.currentEnv.AddStructMethod(
-			// 		structName,
-			// 		def.Name,
-			// 		def.Parameters,
-			// 		def.Body.Statements,
-			// 		)
-			// }
+			if def, ok := stmt.(*FunctionDefNode); ok {
+				// importEnv.Symbols[def.Name] = &FuncSymbol{
+				// 	Body: def.Body,
+				// 	Params: def.Parameters,
+				// 	TypeName: def.Name,
+				// 	Env: NewEnv(importEnv, "method"),
+				// 	NaviteFn: nil,
+				// }
+				e.currentEnv.AddStructMethod(
+					structName,      // "Utils"
+					def.Name,        // e.g. "countAllSym"
+					def.Parameters,
+					def.Body.Statements,
+					nil,
+					)
+			}
 		}
 
-		// e.currentEnv.AddVarSymbol(
-		// 	varName, structName, importEnv)
+		e.currentEnv = prevEnv
+
+		e.currentEnv.AddVarSymbol(
+			varName, structName, NewEnv(importEnv, structName))
+		fmt.Println(e.currentEnv.FindSymbol(varName))
 
 		return 1
 	} else {
