@@ -41,6 +41,10 @@ func (e *Evaluator) initBuiltintMethods() int {
 			NaviteFn: stringContains,
 			TypeName: "string",
 		}
+		stringEnv.Symbols["empty"] = &FuncSymbol{
+			NaviteFn: stringEmpty,
+			TypeName: "string",
+		}
 	} else {
 		return -1
 	}

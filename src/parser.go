@@ -89,7 +89,6 @@ func (p *Parser) parseStatement() Node {
 	}
 	case Semicolon:
 		p.advance()
-		fmt.Println("DEBUG: returning nil cause of Semicolon")
 		return &SemicolonNode{}
 	case Import:
 		node := p.parseImport()

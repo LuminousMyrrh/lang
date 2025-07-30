@@ -337,20 +337,16 @@ func (l *Lexer) Read(s string) ([]*Token, error) {
 			continue
 		}
 
-		// Handle comments (// ... to end of line)
 		if ch == '/' && l.Next(i) == '/' {
-			startColumn := l.currentColumn
 			i += 2
 			l.currentColumn += 2
-			var commentRunes []rune
 
 			for i < length && l.source[i] != '\n' {
-				commentRunes = append(commentRunes, l.source[i])
 				i++
 				l.currentColumn++
 			}
-			tokens = append(tokens, l.genTokenAtPosition(string(commentRunes), Comment, l.currentLine, startColumn))
-			i-- // adjust for outer loop
+
+			i--
 			continue
 		}
 

@@ -52,7 +52,7 @@ func (e *Evaluator) evalBinary(expr *BinaryOpNode) any {
                     expr.Position)
                 return nil
             }
-            return l + r // String concatenation
+            return e.createString(l + r)
         default:
             e.genError("Unsupported type for '+' operator",
                 expr.Position)
@@ -195,13 +195,12 @@ func (e *Evaluator) evalCondition(condition Node) any {
 
 func (e *Evaluator) evalLiteral(lit *LiteralNode) any {
 	if e.resolveType(lit.Value, lit.Position) == "string" {
-		stringEnv := e.currentEnv.FindStructSymbol("string")
-		if stringEnv == nil {
+		if s, ok := lit.Value.(string); ok {
+			return e.createString(s)
+		} else {
+			e.genError("Failed to parse string", lit.Position)
 			return nil
 		}
-		instEnv := NewEnv(stringEnv, "string")
-		instEnv.AddVarSymbol("value", "string", lit.Value)
-		return instEnv
 	}
 	return lit.Value
 }

@@ -26,7 +26,8 @@ func (e *Evaluator) Eval(env *Env, entry *ProgramNode) {
 	e.Environment = env
 	e.Entry = entry
 	e.currentEnv = env
-	e.Builtins = map[string]BuiltinFunction{
+	e.Builtins = map[string]BuiltinFunction {
+		"printf":   builtinPrintf,
 		"print":   builtinPrint,
 		"println": builtinPrintln,
 		"type":    builtinType,
@@ -119,4 +120,12 @@ func (e *Evaluator) evalX(stmt Node) any {
 	}
 }
 
-
+func (e *Evaluator) createString(value string) *Env {
+	stringEnv := e.currentEnv.FindStructSymbol("string")
+	if stringEnv == nil {
+		return nil
+	}
+	instEnv := NewEnv(stringEnv, "string")
+	instEnv.AddVarSymbol("value", "string", value)
+	return instEnv
+}

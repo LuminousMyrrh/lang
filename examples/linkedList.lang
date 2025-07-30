@@ -31,6 +31,18 @@ pub List->insert(val) {
     };
 }
 
+pub List->remove(id) {
+    var target = self.root;
+    var prev = target;
+
+    while (target != nil && target.id != id) {
+        prev = target;
+        target = target.next;
+    }
+
+    prev.next = target.next;
+}
+
 pub List->find(id) {
     var curr = self.root;
     while (curr != nil) {
@@ -60,10 +72,12 @@ func main() {
     for (var i = 1; i < 11; i += 1) {
         list.insert(i * i);
     }
-
     list.show();
-
     print("Node with id 5: ", list.find(5));
+    input("wait");
+    list.remove(3);
+    input("wait");
+    list.show();
 }
 
 main();

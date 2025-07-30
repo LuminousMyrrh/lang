@@ -74,10 +74,16 @@ func (e *Evaluator) evalAssignment(a *AssignmentNode) any {
 					e.currentEnv.UpdateSymbol(target.Name, curr+val, "int")
 					return curr + val
 				}
+			case float64:
+				if val, ok := value.(float64); ok {
+					e.currentEnv.UpdateSymbol(target.Name, curr+val, "int")
+					return curr + val
+				}
 			case string:
 				if val, ok := value.(string); ok {
-					e.currentEnv.UpdateSymbol(target.Name, curr+val, "string")
-					return curr + val
+					st := e.createString(curr+val)
+					e.currentEnv.UpdateSymbol(target.Name, st, "string")
+					return st
 				}
 			}
 			e.genError(fmt.Sprintf(

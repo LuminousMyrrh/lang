@@ -46,7 +46,7 @@ func (e *Evaluator) evalArrayAccess(stmt *ArrayAccessNode) any {
 			e.genError(fmt.Sprintf("Index %d out of bounds", i), stmt.Position)
 			return nil
 		}
-		return string(runes[i])
+		return e.createString(string(runes[i]))
 	}
 	default:
 		e.genError(fmt.Sprintf(

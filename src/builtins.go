@@ -17,6 +17,15 @@ func decodeEscapeSequences(input string) (string, error) {
 func builtinPrint(e *Evaluator, args []Node, pos Position) any {
     for _, arg := range args {
         val := unwrapBuiltinValue(e.eval(arg))
+        fmt.Print(val)
+    }
+    fmt.Println()
+    return nilValue{}
+}
+
+func builtinPrintf(e *Evaluator, args []Node, pos Position) any {
+    for _, arg := range args {
+        val := unwrapBuiltinValue(e.eval(arg))
         if s, ok := val.(string); ok {
             decoded, err := decodeEscapeSequences(s)
             if err != nil {
@@ -135,11 +144,11 @@ func builtinString(e *Evaluator, args []Node, pos Position) any {
 	val := unwrapBuiltinValue(e.eval(args[0]))
 	switch v := val.(type) {
 	case int:
-		return strconv.Itoa(v)
+		return e.createString(strconv.Itoa(v))
 	case float64:
-		return strconv.FormatFloat(v, 'g', -1, 64)
+		return e.createString(strconv.FormatFloat(v, 'g', -1, 64))
 	case string:
-		return v
+		return e.createString(v)
 	default:
 		e.genError(fmt.Sprintf("Unsupported type: %T", v), pos)
 		return nil
@@ -169,7 +178,7 @@ func builtinReadAll(e *Evaluator, args []Node, pos Position) any {
         e.genError("Function 'readAll' expects at least one argument, but 0 were provided", pos)
         return nil
     }
-    evaledFileName := e.eval(args[0])
+    evaledFileName := unwrapBuiltinValue(e.eval(args[0]))
     fileName, ok := evaledFileName.(string)
     if !ok {
         e.genError(fmt.Sprintf(
@@ -182,7 +191,7 @@ func builtinReadAll(e *Evaluator, args []Node, pos Position) any {
         e.genError(err.Error(), pos)
         return nil
     }
-    return string(data)
+    return e.createString(string(data))
 }
 
 func builtinWrite(e *Evaluator, args []Node, pos Position) any {

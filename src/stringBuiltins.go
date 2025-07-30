@@ -129,3 +129,18 @@ func stringContains(e *Evaluator, self *Env, args []any, pos Position) any {
 
 	return strings.Contains(s, subs)
 }
+
+func stringEmpty(e *Evaluator, self *Env, args []any, pos Position) any {
+	if len(args) != 0 {
+		e.genError("'empty' doesn't accent any arguments", pos)
+		return nil
+	}
+
+	s, err := getValue(self)
+	if err != nil {
+		e.genError(err.Error(), pos)
+		return nil
+	}
+
+	return len(s) == 0
+}
