@@ -11,29 +11,29 @@
 - Vars
 - Syntax
 ```
-    import utils > countAllSym;
-    import test;
+import utils > countAllSym;
+import test;
 
-    func main() {
-        var s = "ab1234ation";
-        s.capitalize();
-        print(s);
-        var num = s.substring(1+1, 5);
-        num = int(num);
-        if (type(num) == "int") {
-            print("Yep");
-        }
-
-        if (s.contains(string(num))) {
-            print("It is in fact contains it");
-        } else {
-            print("its not");
-        }
-
-        print(countAllSym(s, "a"));
+func main() {
+    var s = "ab1234ation";
+    s.capitalize();
+    print(s);
+    var num = s.substring(1+1, 5);
+    num = int(num);
+    if (type(num) == "int") {
+        print("Yep");
     }
 
-    main();
+    if (s.contains(string(num))) {
+        print("It is in fact contains it");
+    } else {
+        print("its not");
+    }
+
+    print(countAllSym(s, "a"));
+}
+
+main();
 ```
 
 
