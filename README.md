@@ -14,6 +14,6 @@
 - [ ] fix inputs
     - currently it just reads imported file to current global env
     - [x] full file import
-    - [ ] selective import
+    - [x] selective import
     - [ ] aliases
 - [ ] make strings interatable automatically
