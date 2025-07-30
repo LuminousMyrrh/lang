@@ -11,7 +11,6 @@
 - Vars
 - Syntax
 ```
-
     import utils > countAllSym;
     import test;
 
@@ -35,7 +34,8 @@
     }
 
     main();
-    ```
+```
+
 
 # Plan
 - [ ] fix inputs
