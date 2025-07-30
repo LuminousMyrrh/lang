@@ -9,3 +9,11 @@
 - Loops (for, while)
 - Control (if-else if-else, break)
 - Vars
+
+# Plan
+- [ ] Improved classes 
+    - currently it's impossing to travel through the linked list
+- [ ] A bit of declarative style
+    - [ ] Pattern matching
+- [ ] Improved performance
+- [ ] idk
