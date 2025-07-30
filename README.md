@@ -11,9 +11,9 @@
 - Vars
 
 # Plan
-- [ ] Improved classes 
-    - currently it's impossing to travel through the linked list
-- [ ] A bit of declarative style
-    - [ ] Pattern matching
-- [ ] Improved performance
-- [ ] idk
+- [ ] fix inputs
+    - currently it just reads imported file to current global env
+    - [ ] full file import
+    - [ ] selective import
+    - [ ] aliases
+- [ ] make strings interatable automatically
