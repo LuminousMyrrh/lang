@@ -1,0 +1,69 @@
+class Node {
+    pub id,
+    pub val,
+    pub next
+}
+
+class List {
+    pub root
+}
+
+pub List->insert(val) {
+    if (self.root == nil) {
+        self.root = Node {
+            id: 0,
+            val: val,
+            next: nil
+        }
+        return;
+    }
+
+    var curr = self.root;
+    var lastId = curr.id;
+    while (curr.next != nil) {
+        curr = curr.next;
+        lastId = curr.id;
+    }
+    curr.next = Node {
+        id: lastId + 1,
+        val: val,
+        next: nil
+    };
+}
+
+pub List->find(id) {
+    var curr = self.root;
+    while (curr != nil) {
+        if (curr.id == id) {
+            return curr.val;
+        }
+        curr = curr.next;
+    }
+    return nil;
+}
+
+pub List->show() {
+    for (var curr = self.root; curr != nil; curr = curr.next) {
+        print(curr.val);
+    }
+}
+
+func main() {
+    var list = List{
+        root: Node {
+            id: 0,
+            val: 0,
+            next: nil
+        }
+    };
+
+    for (var i = 1; i < 11; i += 1) {
+        list.insert(i * i);
+    }
+
+    list.show();
+
+    print("Node with id 5: ", list.find(5));
+}
+
+main();

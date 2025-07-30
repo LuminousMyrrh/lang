@@ -1,2 +1,5 @@
-*.lang
 output.txt
+test.lang
+main.lang
+2test.lang
+utils.lang

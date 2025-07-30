@@ -1,0 +1,3 @@
+var x = input("Write something: ");
+
+print("You have wrote: ", x);

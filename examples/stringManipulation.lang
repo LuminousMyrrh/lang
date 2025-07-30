@@ -1,0 +1,14 @@
+func main() {
+    var x = "hello";
+    var y = "world";
+
+    var comb = x + " " + y;
+
+    if (comb == "hello world") {
+        print("Correct");
+    } else {
+        print("Incorrect");
+    }
+}
+
+main();
