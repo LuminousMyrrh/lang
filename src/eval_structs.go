@@ -2,63 +2,6 @@ package main
 
 import ("fmt")
 
-func (e *Evaluator) initBuiltintClasses() {
-	stringEnv := NewEnv(nil, "string")
-	stringEnv.AddVarSymbol(
-		"value",
-		"string",
-		nil)
-	e.currentEnv.AddStructSymbol("string", stringEnv)
-	
-
-	intEnv := NewEnv(nil, "int")
-	intEnv.AddVarSymbol(
-		"value",
-		"int",
-		nil)
-	e.currentEnv.AddStructSymbol("int", intEnv)
-
-	floatEnv := NewEnv(nil, "float")
-	floatEnv.AddVarSymbol(
-		"value",
-		"float",
-		nil)
-	e.currentEnv.AddStructSymbol("float", floatEnv)
-}
-
-func (e *Evaluator) initBuiltintMethods() int {
-	stringEnv := e.currentEnv.FindStructSymbol("string")
-	if stringEnv != nil {
-		stringEnv.Symbols["substring"] = &FuncSymbol{
-			NaviteFn: stringSubstring,
-			TypeName: "string",
-		}
-		stringEnv.Symbols["capitalize"] = &FuncSymbol{
-			NaviteFn: stringCapitalize,
-			TypeName: "string",
-		}
-		stringEnv.Symbols["contains"] = &FuncSymbol{
-			NaviteFn: stringContains,
-			TypeName: "string",
-		}
-		stringEnv.Symbols["empty"] = &FuncSymbol{
-			NaviteFn: stringEmpty,
-			TypeName: "string",
-		}
-		stringEnv.Symbols["isDigit"] = &FuncSymbol{
-			NaviteFn: stringIsDigit,
-			TypeName: "string",
-		}
-		stringEnv.Symbols["isAlph"] = &FuncSymbol{
-			NaviteFn: stringIsAlph,
-			TypeName: "string",
-		}
-	} else {
-		return -1
-	}
-	return 0
-}
-
 func (e *Evaluator) evalStructDef(stmt *StructDefNode) any {
 	if (e.currentEnv.SymbolExists(stmt.Name)) {
 		e.genError(fmt.Sprintf(

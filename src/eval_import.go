@@ -47,24 +47,43 @@ func (e *Evaluator) evalImport(stmt *ImportNode) any {
 		importEnv := NewEnv(e.currentEnv, structName)
 		e.currentEnv.AddStructSymbol(structName, importEnv)
 		prevEnv := e.currentEnv
-		e.currentEnv = importEnv
 
 		for _, stmt := range mnode.Nodes {
-			if def, ok := stmt.(*FunctionDefNode); ok {
-				// importEnv.Symbols[def.Name] = &FuncSymbol{
-				// 	Body: def.Body,
-				// 	Params: def.Parameters,
-				// 	TypeName: def.Name,
-				// 	Env: NewEnv(importEnv, "method"),
-				// 	NaviteFn: nil,
-				// }
+			switch def := stmt.(type) {
+			case *FunctionDefNode: {
+				e.currentEnv = importEnv
 				e.currentEnv.AddStructMethod(
-					structName,      // "Utils"
-					def.Name,        // e.g. "countAllSym"
+					structName,
+					def.Name,
 					def.Parameters,
 					def.Body.Statements,
 					nil,
 					)
+			}
+			case *StructMethodDef: {
+				strEnv := e.currentEnv.FindStructSymbol(def.StructName)
+				e.currentEnv = importEnv
+				if strEnv == nil {
+					e.genError(fmt.Sprintf(
+						"Class '%s' not found",
+						def.StructName,
+						), def.Position)
+					return nil
+				}
+				strEnv.AddStructMethod(
+					def.StructName,
+					def.MethodName,
+					def.Parameters,
+					def.Body.Statements,
+					nil,
+					)
+			}
+			case *StructDefNode: {
+				res := e.evalStructDef(def)
+				if res == nil {
+					return nil
+				}
+			}
 			}
 		}
 
