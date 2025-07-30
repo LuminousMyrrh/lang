@@ -265,6 +265,9 @@ func (e *Evaluator) evalLogical(node *BinaryOpNode) any {
 	}
 	left := unwrapBuiltinValue(e.eval(node.Left))
 	right := unwrapBuiltinValue(e.eval(node.Right))
+	if (left == nil || right == nil) {
+		return nil
+	}
 
 	switch node.Op {
 	case ">", "<", ">=", "<=":

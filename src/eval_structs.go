@@ -45,6 +45,14 @@ func (e *Evaluator) initBuiltintMethods() int {
 			NaviteFn: stringEmpty,
 			TypeName: "string",
 		}
+		stringEnv.Symbols["isDigit"] = &FuncSymbol{
+			NaviteFn: stringIsDigit,
+			TypeName: "string",
+		}
+		stringEnv.Symbols["isAlph"] = &FuncSymbol{
+			NaviteFn: stringIsAlph,
+			TypeName: "string",
+		}
 	} else {
 		return -1
 	}
@@ -216,30 +224,14 @@ func (e *Evaluator) evalStructMethodCall(
 }
 
 func (e *Evaluator) evalStructMemberAccess(stmt *StructMethodCall) any {
-    // Get the variable holding the struct instance
-	callerIdent, ok := stmt.Caller.(*IdentifierNode)
-	if !ok {
-		e.genError(fmt.Sprintf(
-			"Struct method call: Caller must be an identifier '%T'",
-			stmt.Caller,
-			), stmt.Position)
-		return nil
-	}
-	sym := e.currentEnv.FindSymbol(callerIdent.Name)
-    varSym, ok := sym.(*VarSymbol)
-    if !ok {
-        e.genError(fmt.Sprintf("'%s' is not a variable",
-			callerIdent.Name),
-			stmt.Position)
-        return nil
-    }
+    // Evaluate caller expression, expecting a struct instance Env
+    callerValue := e.eval(stmt.Caller)
 
-    instanceEnv, ok := varSym.Value().(*Env)
+    instanceEnv, ok := callerValue.(*Env)
     if !ok {
         e.genError(fmt.Sprintf(
-			"Variable '%s' is not a struct instance",
-			callerIdent.Name),
-			stmt.Position)
+           "Caller is not a struct instance but %T", callerValue),
+           stmt.Position)
         return nil
     }
 
@@ -248,17 +240,16 @@ func (e *Evaluator) evalStructMemberAccess(stmt *StructMethodCall) any {
             return fieldSym.Value()
         }
         e.genError(fmt.Sprintf("Field '%s' not found in struct instance",
-			stmt.MethodName),
-			stmt.Position)
+            stmt.MethodName), stmt.Position)
         return nil
     }
 
-    // Otherwise: method call
+    // Method call: evaluate arguments
     argValues := make([]any, len(stmt.Args))
     for i, arg := range stmt.Args {
         argValues[i] = e.eval(arg)
     }
 
     return e.evalStructMethodCall(
-		instanceEnv, stmt.MethodName, argValues, stmt.Position)
+        instanceEnv, stmt.MethodName, argValues, stmt.Position)
 }

@@ -144,3 +144,45 @@ func stringEmpty(e *Evaluator, self *Env, args []any, pos Position) any {
 
 	return len(s) == 0
 }
+
+func stringIsDigit(e *Evaluator, self *Env, args []any, pos Position) any {
+	if len(args) != 0 {
+		e.genError("'empty' doesn't accent any arguments", pos)
+		return nil
+	}
+
+	s, err := getValue(self)
+	if err != nil {
+		e.genError(err.Error(), pos)
+		return nil
+	}
+
+	for _, ch := range s {
+		if !unicode.IsDigit(ch) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func stringIsAlph(e *Evaluator, self *Env, args []any, pos Position) any {
+	if len(args) != 0 {
+		e.genError("'empty' doesn't accent any arguments", pos)
+		return nil
+	}
+
+	s, err := getValue(self)
+	if err != nil {
+		e.genError(err.Error(), pos)
+		return nil
+	}
+
+	for _, ch := range s {
+		if !unicode.IsLetter(ch) {
+			return false
+		}
+	}
+
+	return true
+}

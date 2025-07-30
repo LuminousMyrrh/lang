@@ -8,7 +8,7 @@ func (e *Evaluator) evalArray(arr *ArrayNode) any {
 	var values []any
 
 	for _, el := range arr.Elements {
-		values = append(values, unwrapBuiltinValue(e.eval(el)))
+		values = append(values, e.eval(el))
 	}
 
 	return values;
@@ -74,8 +74,8 @@ func (e *Evaluator) evalArrayAssign(stmt *ArrayAssign) any {
 				continue
 			}
 			// Now, access.Target is the base IdentifierNode
-			parent = unwrapBuiltinValue(e.eval(access.Target))
-			idx := unwrapBuiltinValue(e.eval(access.Index))
+			parent = e.eval(access.Target)
+			idx := e.eval(access.Index)
 			index, ok = idx.(int)
 			if !ok {
 				e.genError("Array index must be an integer",
@@ -105,7 +105,7 @@ func (e *Evaluator) evalArrayAssign(stmt *ArrayAssign) any {
 	}
 
 	// Assign the value
-	val := unwrapBuiltinValue(e.eval(stmt.Value))
+	val := e.eval(stmt.Value)
 	arr[index] = val
 	e.currentEnv.UpdateSymbol(stmt.Target.String(),
 		arr, e.resolveType(arr, stmt.Position))
