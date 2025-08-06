@@ -1,8 +1,7 @@
 package main
 
 func (p *Parser) parseArray() *ArrayNode {
-    // Assume current token is LBracket
-    p.advance() // move past '['
+    p.advance()
 	initTok := p.currentToken()
     var elems []Node
 
@@ -12,8 +11,10 @@ func (p *Parser) parseArray() *ArrayNode {
             continue
         }
         elems = append(elems, p.parseValue())
-        // Only advance if the next token is not a comma or closing bracket
-        if p.currentToken() != nil && p.currentToken().TType != RBrace && p.currentToken().TType != Comma {
+        if p.currentToken() != nil &&
+			p.currentToken().TType != RBrace &&
+			p.currentToken().TType != Comma {
+
             p.advance()
         }
     }
@@ -37,7 +38,7 @@ func (p *Parser) parseArrayAccess(node Node) *ArrayAccessNode {
 	var retNode *ArrayAccessNode
     for p.currentToken() != nil && p.currentToken().TType == LBrace {
         p.advance() // skip '['
-        index := p.parseExpression(0)
+        index := p.parseValue()
         if p.currentToken() == nil || p.currentToken().TType != RBrace {
             p.genError("Expected ']' after array index")
             return nil

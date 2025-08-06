@@ -180,8 +180,10 @@ func (e *Evaluator) evalAssignment(a *AssignmentNode) any {
 		}
 		arrIdent, ok := arrNameNode.(*IdentifierNode)
 		if !ok {
-			e.genError(
-				"Array assignment target must be an identifier",
+			e.genError(fmt.Sprintf(
+				"Array assignment target must be an identifier but got: %T",
+				arrNameNode,
+				),
 				target.Position,
 				)
 			return nil

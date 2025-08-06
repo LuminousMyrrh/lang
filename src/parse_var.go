@@ -55,18 +55,26 @@ func (p *Parser) parseIdentifier() Node {
 	}
 
     // Handle any number of array accesses: x[i][j][k]
-    if p.currentToken() != nil && p.currentToken().TType == LBrace {
-		node = p.parseArrayAccess(node)
-    }
-
-    if p.currentToken() != nil && p.currentToken().TType == Dot {
-		node = p.parseStructMethodCall(node)
-    }
-
-    // Function call: x(...)
-    if p.currentToken() != nil && p.currentToken().TType == LParen {
-		node = p.parseFuncCall(node)
-    }
+	for {
+		if p.currentToken() != nil && p.currentToken().TType == LBrace {
+			node = p.parseArrayAccess(node)
+			if node == nil {
+				return nil
+			}
+		} else if p.currentToken() != nil && p.currentToken().TType == Dot {
+			node = p.parseStructMethodCall(node)
+			if node == nil {
+				return nil
+			}
+		} else if p.currentToken() != nil && p.currentToken().TType == LParen {
+			node = p.parseFuncCall(node)
+			if node == nil {
+				return nil
+			}
+		} else {
+			break
+		}
+	}
 
     // Assignment: x = ... or x[i][j] = ...
     if p.currentToken() != nil && (p.currentToken().TType == Assign ||
