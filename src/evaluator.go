@@ -38,6 +38,7 @@ func (e *Evaluator) Eval(env *Env, entry *ProgramNode) {
 		"len":     builtinLen,
 		"readAll": builtinReadAll,
 		"write":   builtinWrite,
+		"fetch":   builtinFetch,
 	}
 	e.initBuiltintClasses()
 	e.initBuiltintMethods()

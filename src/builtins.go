@@ -2,8 +2,11 @@ package main
 
 import (
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"strconv"
+	"strings"
 )
 
 type BuiltinFunction func(e *Evaluator, args []Node, pos Position) any
@@ -194,6 +197,38 @@ func builtinReadAll(e *Evaluator, args []Node, pos Position) any {
     return e.createString(string(data))
 }
 
+func builtinFetch(e *Evaluator, args []Node, pos Position) any {
+	if len(args) != 1 {
+		e.genError(
+			"Function 'fetch' expect only one argument", pos);
+		return nil
+	}
+
+	evaledName := unwrapBuiltinValue(e.eval(args[0]))
+	name, ok := evaledName.(string)
+	if !ok {
+		e.genError(
+			"Argument should be string", pos);
+		return nil
+	}
+	if !strings.HasPrefix("https://", name) {
+		name = "https://" + name
+	}
+
+	resp, err := http.Get(name)
+	if err != nil {
+		e.genError(fmt.Sprintf("Failed to fetch: %s", err), pos)
+		return nil
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		e.genError(fmt.Sprintf("Failed to read body: %s", err), pos)
+		return nil
+	}
+	return body
+}
+
 func builtinWrite(e *Evaluator, args []Node, pos Position) any {
 	if len(args) != 2 {
 		e.genError(
@@ -285,5 +320,3 @@ func (e *Evaluator) initBuiltintMethods() int {
 	}
 	return 0
 }
-
-
