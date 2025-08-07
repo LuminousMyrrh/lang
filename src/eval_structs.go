@@ -22,7 +22,7 @@ func (e *Evaluator) evalStructDef(stmt *StructDefNode) any {
 		structEnv.AddVarSymbol(
 			field.Name,
 			"nil",
-			nil)
+			nilValue{})
 	}
 
 	e.currentEnv.AddStructSymbol(

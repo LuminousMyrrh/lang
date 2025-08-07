@@ -178,8 +178,15 @@ func (e *Evaluator) evalAssignment(a *AssignmentNode) any {
 				)
 			return nil
 		}
-		arrIdent, ok := arrNameNode.(*IdentifierNode)
-		if !ok {
+		var name string
+		switch val := arrNameNode.(type) {
+		case *IdentifierNode: {
+			name = val.Name
+		}
+		case *StructMethodCall: {
+			name = val.MethodName
+		}
+		default: {
 			e.genError(fmt.Sprintf(
 				"Array assignment target must be an identifier but got: %T",
 				arrNameNode,
@@ -188,12 +195,13 @@ func (e *Evaluator) evalAssignment(a *AssignmentNode) any {
 				)
 			return nil
 		}
-		arrSym := e.currentEnv.FindSymbol(arrIdent.Name)
+		}
+		arrSym := e.currentEnv.FindSymbol(name)
 		varSym, ok := arrSym.(*VarSymbol)
 		if !ok {
 			e.genError(fmt.Sprintf(
 				"Variable '%s' is not a VarSymbol",
-				arrIdent.Name),
+				name),
 				target.Position,
 				)
 			return nil
@@ -202,7 +210,7 @@ func (e *Evaluator) evalAssignment(a *AssignmentNode) any {
 		if !ok {
 			e.genError(fmt.Sprintf(
 					"Variable '%s' is not an array. Got: %T",
-					arrIdent.Name,
+					name,
 					varSym.Value()),
 				target.Position,
 				)
@@ -231,7 +239,7 @@ func (e *Evaluator) evalAssignment(a *AssignmentNode) any {
 		}
 
 		// Store the grown array back in the environment
-		e.currentEnv.UpdateSymbol(arrIdent.Name, 
+		e.currentEnv.UpdateSymbol(name, 
 			arr, e.resolveType(arr, a.Position))
 		return value
 	}

@@ -14,6 +14,7 @@ func (e *Evaluator) evalBinary(expr *BinaryOpNode) any {
 		right = ret.value
 	}
 	if (left == nil || right == nil) {
+		e.genError("Expression operand cannot bet nil", expr.Position)
 		return nil
 	}
 
@@ -165,6 +166,7 @@ func (e *Evaluator) evalUnary(node *UnaryOpNode) any {
             node.Position)
         return nil
     default:
+		e.genError("Unsupported unary operator", node.Position)
         return nil
     }
 }
@@ -181,8 +183,6 @@ func (e *Evaluator) evalCondition(condition Node) any {
 		return e.evalIdentifier(t)
 	case *LiteralNode:
 		return e.evalLiteral(t)
-	case *NilNode:
-		return nil
 	case *StructMethodCall:
 		return e.evalStructMemberAccess(t)
 	default:
@@ -265,7 +265,9 @@ func (e *Evaluator) evalLogical(node *BinaryOpNode) any {
 	}
 	left := unwrapBuiltinValue(e.eval(node.Left))
 	right := unwrapBuiltinValue(e.eval(node.Right))
+
 	if (left == nil || right == nil) {
+		e.genError("Failed to get value", node.Position)
 		return nil
 	}
 
@@ -333,6 +335,7 @@ func (e *Evaluator) evalLogical(node *BinaryOpNode) any {
 			node.Position)
 		return nil
 	}
+	e.genError("Uncaught error happen", node.Position)
 	return nil
 }
 

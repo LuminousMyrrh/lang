@@ -7,7 +7,7 @@ func (e *Evaluator) evalBlock(block *BlockNode) any {
 	var result any
 	for _, stmt := range block.Statements {
 		result = e.eval(stmt)
-		if _, ok := result.(returnValue); ok {
+		if _, ok := result.(returnValue); ok || result != nil {
 			e.currentEnv = prevEnv
 			return result
 		}
@@ -19,6 +19,7 @@ func (e *Evaluator) evalBlock(block *BlockNode) any {
 func (e *Evaluator) evalIf(stmt *IfNode) any {
     cond := e.evalCondition(stmt.Condition)
     if cond == nil {
+		e.genError("Condition doesn't exist", stmt.Position)
         return nil
     }
     if cond == true && stmt.ThenBranch != nil {
@@ -93,6 +94,9 @@ func (e *Evaluator) evalFor(stmt *ForNode) any {
 			break
 		}
 		bodyResult := e.evalLoopBlock(stmt.Body)
+		if bodyResult == nil {
+			return nil
+		}
 		if _, isBreak := bodyResult.(breakSignal); isBreak {
 			break
 		}
@@ -115,7 +119,7 @@ func (e *Evaluator) evalLoopBlock(block *BlockNode) any {
 	prevEnv := e.currentEnv
 	e.currentEnv = blockEnv
 
-	var result any
+	var result any = nilValue{}
 	for _, stmt := range block.Statements {
 		result := e.eval(stmt)
 		if _, ok := stmt.(*BreakNode); ok {

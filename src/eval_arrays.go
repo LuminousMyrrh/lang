@@ -110,5 +110,5 @@ func (e *Evaluator) evalArrayAssign(stmt *ArrayAssign) any {
 	e.currentEnv.UpdateSymbol(stmt.Target.String(),
 		arr, e.resolveType(arr, stmt.Position))
 
-	return nil
+	return nilValue{}
 }

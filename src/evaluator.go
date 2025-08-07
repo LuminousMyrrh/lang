@@ -43,7 +43,7 @@ func (e *Evaluator) Eval(env *Env, entry *ProgramNode) {
 	e.initBuiltintMethods()
 
 	for _, stmt := range entry.Nodes{
-		if val := e.eval(stmt); val == nil {
+		if e.eval(stmt) == nil {
 			return
 		}
 	}
