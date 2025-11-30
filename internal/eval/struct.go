@@ -142,7 +142,7 @@ func (e *Evaluator) evalStructMethodCall(
 	}
 
 	if method.NativeFunc != nil {
-		return method.NativeFunc(e, self, args, pos)
+		return method.NativeFunc(*e, self, args, pos)
 	}
 
 	if len(args) != len(method.Params) {

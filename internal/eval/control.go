@@ -1,7 +1,12 @@
 package eval
 
-func (e *Evaluator) evalBlock(block *BlockNode) any {
-	blockEnv := NewEnv(e.currentEnv, "block")
+import (
+	"lang/internal/env"
+	"lang/internal/parser"
+)
+
+func (e *Evaluator) evalBlock(block *parser.BlockNode) any {
+	blockEnv := env.NewEnv(e.currentEnv, "block")
 	prevEnv := e.currentEnv
 	e.currentEnv = blockEnv
 	var result any
@@ -16,30 +21,30 @@ func (e *Evaluator) evalBlock(block *BlockNode) any {
 	return result
 }
 
-func (e *Evaluator) evalIf(stmt *IfNode) any {
-    cond := e.evalCondition(stmt.Condition)
-    if cond == nil {
+func (e *Evaluator) evalIf(stmt *parser.IfNode) any {
+	cond := e.evalCondition(stmt.Condition)
+	if cond == nil {
 		e.genError("Condition doesn't exist", stmt.Position)
-        return nil
-    }
-    if cond == true && stmt.ThenBranch != nil {
-        res := e.eval(stmt.ThenBranch)
-        if ret, ok := res.(returnValue); ok {
-            return ret
-        }
-        return res
-    } else if stmt.ElseBranch != nil {
-        res := e.eval(stmt.ElseBranch)
-        if ret, ok := res.(returnValue); ok {
-            return ret
-        }
-        return res
-    } else {
-        return nil
-    }
+		return nil
+	}
+	if cond == true && stmt.ThenBranch != nil {
+		res := e.eval(stmt.ThenBranch)
+		if ret, ok := res.(returnValue); ok {
+			return ret
+		}
+		return res
+	} else if stmt.ElseBranch != nil {
+		res := e.eval(stmt.ElseBranch)
+		if ret, ok := res.(returnValue); ok {
+			return ret
+		}
+		return res
+	} else {
+		return nil
+	}
 }
 
-func (e *Evaluator) evalWhile(stmt *WhileNode) any {
+func (e *Evaluator) evalWhile(stmt *parser.WhileNode) any {
 	var result any
 	for {
 		cond := e.eval(stmt.Condition)
@@ -64,23 +69,25 @@ func (e *Evaluator) evalWhile(stmt *WhileNode) any {
 	return result
 }
 
-func (e *Evaluator) evalFor(stmt *ForNode) any {
+func (e *Evaluator) evalFor(stmt *parser.ForNode) any {
 	var result any
 	switch v := stmt.Init.(type) {
-	case *VarDefNode: {
-		if v != nil {
-			val := e.eval(v.Value)
-			e.currentEnv.AddVarSymbol(
+	case *parser.VarDefNode:
+		{
+			if v != nil {
+				val := e.eval(v.Value)
+				e.currentEnv.AddVarSymbol(
 					v.Name,
 					e.resolveType(val, v.Position),
 					val)
+			}
 		}
-	}
-	case *AssignmentNode: {
-		if v != nil {
-			e.eval(v)
+	case *parser.AssignmentNode:
+		{
+			if v != nil {
+				e.eval(v)
+			}
 		}
-	}
 	}
 	for {
 		cond := e.eval(stmt.Condition)
@@ -109,20 +116,20 @@ func (e *Evaluator) evalFor(stmt *ForNode) any {
 	return result
 }
 
-func (e *Evaluator) evalReturn(ret *ReturnNode) any {
-    val := e.eval(ret.Value)
-    return returnValue{val}
+func (e *Evaluator) evalReturn(ret *parser.ReturnNode) any {
+	val := e.eval(ret.Value)
+	return returnValue{val}
 }
 
-func (e *Evaluator) evalLoopBlock(block *BlockNode) any {
-	blockEnv := NewEnv(e.currentEnv, "block")
+func (e *Evaluator) evalLoopBlock(block *parser.BlockNode) any {
+	blockEnv := env.NewEnv(e.currentEnv, "block")
 	prevEnv := e.currentEnv
 	e.currentEnv = blockEnv
 
 	var result any = nilValue{}
 	for _, stmt := range block.Statements {
 		result := e.eval(stmt)
-		if _, ok := stmt.(*BreakNode); ok {
+		if _, ok := stmt.(*parser.BreakNode); ok {
 			e.currentEnv = prevEnv
 			return breakSignal{}
 		}
@@ -134,4 +141,3 @@ func (e *Evaluator) evalLoopBlock(block *BlockNode) any {
 	e.currentEnv = prevEnv
 	return result
 }
-

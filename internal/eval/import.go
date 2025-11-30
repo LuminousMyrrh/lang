@@ -53,7 +53,7 @@ func (e *Evaluator) evalImport(stmt *parser.ImportNode) any {
 
 		for _, stmt := range mnode.Nodes {
 			switch def := stmt.(type) {
-			case *FunctionDefNode: {
+			case *parser.FunctionDefNode: {
 				e.currentEnv = importEnv
 				e.currentEnv.AddStructMethod(
 					structName,
@@ -63,7 +63,7 @@ func (e *Evaluator) evalImport(stmt *parser.ImportNode) any {
 					nil,
 					)
 			}
-			case *StructMethodDef: {
+			case *parser.StructMethodDef: {
 				strEnv := e.currentEnv.FindStructSymbol(def.StructName)
 				e.currentEnv = importEnv
 				if strEnv == nil {
@@ -81,7 +81,7 @@ func (e *Evaluator) evalImport(stmt *parser.ImportNode) any {
 					nil,
 					)
 			}
-			case *StructDefNode: {
+			case *parser.StructDefNode: {
 				res := e.evalStructDef(def)
 				if res == nil {
 					return nil
@@ -93,7 +93,7 @@ func (e *Evaluator) evalImport(stmt *parser.ImportNode) any {
 		e.currentEnv = prevEnv
 
 		e.currentEnv.AddVarSymbol(
-			varName, structName, NewEnv(importEnv, structName))
+			varName, structName, env.NewEnv(importEnv, structName))
 
 		return 1
 	} else {

@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"lang/internal/env"
 	"lang/internal/eval"
 	"lang/internal/lexer"
 	"lang/internal/parser"
@@ -12,8 +11,7 @@ import (
 )
 
 func evalit(source string) (error) {
-	globalEnv := env.NewEnv(nil, "global")
-	lexer := lexer.Lexer{};
+	lexer := lexer.NewLexer();
 	toks, err := lexer.Read(source);
 	//fmt.Println("Scanning done")
 	parser := parser.NewParser(toks);
@@ -34,7 +32,7 @@ func evalit(source string) (error) {
 		}
 	} else {
 		// mnode.Print()
-		evaluator := eval.NewEvaluator(globalEnv, mnode)
+		evaluator := eval.NewEvaluatorAutoEnv(mnode)
 		evaluator.Eval()
 		if len(evaluator.Errors) > 0 {
 			for _, err := range evaluator.Errors {

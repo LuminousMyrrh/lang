@@ -2,9 +2,10 @@ package eval
 
 import (
 	"fmt"
+	"lang/internal/parser"
 )
 
-func (e *Evaluator) evalBinary(expr *BinaryOpNode) any {
+func (e *Evaluator) evalBinary(expr *parser.BinaryOpNode) any {
 	left := unwrapBuiltinValue(e.eval(expr.Left))
 	if ret, ok := left.(returnValue); ok {
 		left = ret.value
@@ -131,7 +132,7 @@ func (e *Evaluator) evalBinary(expr *BinaryOpNode) any {
     return nil
 }
 
-func (e *Evaluator) evalUnary(node *UnaryOpNode) any {
+func (e *Evaluator) evalUnary(node *parser.UnaryOpNode) any {
     value := unwrapBuiltinValue(e.eval(node.Expr))
     if _, ok := value.(nilValue); ok {
         e.genError("Value with unary shouldn't be nil!", node.Position)
@@ -171,29 +172,29 @@ func (e *Evaluator) evalUnary(node *UnaryOpNode) any {
     }
 }
 
-func (e *Evaluator) evalCondition(condition Node) any {
+func (e *Evaluator) evalCondition(condition parser.Node) any {
 	switch t := condition.(type) {
-	case *UnaryOpNode:
+	case *parser.UnaryOpNode:
 		return e.evalUnary(t)
-	case *BinaryOpNode:
+	case *parser.BinaryOpNode:
 		return e.evalBinary(t)
-	case *FunctionCallNode:
+	case *parser.FunctionCallNode:
 		return e.evalFunctionCall(t)
-	case *IdentifierNode:
+	case *parser.IdentifierNode:
 		return e.evalIdentifier(t)
-	case *LiteralNode:
+	case *parser.LiteralNode:
 		return e.evalLiteral(t)
-	case *StructMethodCall:
+	case *parser.StructMethodCall:
 		return e.evalStructMemberAccess(t)
 	default:
 		e.genError(fmt.Sprintf(
 			"Unsupported type: %T", condition),
-			Position{-1, -1})
+			parser.Position{Row: -1, Column: -1})
 		return nil
 	}
 }
 
-func (e *Evaluator) evalLiteral(lit *LiteralNode) any {
+func (e *Evaluator) evalLiteral(lit *parser.LiteralNode) any {
 	if e.resolveType(lit.Value, lit.Position) == "string" {
 		if s, ok := lit.Value.(string); ok {
 			return e.createString(s)
@@ -213,7 +214,7 @@ func (e *Evaluator) evalFalse() any {
 	return false
 }
 
-func (e *Evaluator) evalLogical(node *BinaryOpNode) any {
+func (e *Evaluator) evalLogical(node *parser.BinaryOpNode) any {
 	switch node.Op {
 	case "&&": {
 		left := unwrapBuiltinValue(e.eval(node.Left))
@@ -340,8 +341,8 @@ func (e *Evaluator) evalLogical(node *BinaryOpNode) any {
 }
 
 
-func (e *Evaluator) handlePostfixPP(node *UnaryOpNode) any {
-	ident, ok := node.Expr.(*IdentifierNode)
+func (e *Evaluator) handlePostfixPP(node *parser.UnaryOpNode) any {
+	ident, ok := node.Expr.(*parser.IdentifierNode)
 	if !ok {
 		e.genError("++ operator requires an identifier",
 			node.Position)
@@ -363,8 +364,8 @@ func (e *Evaluator) handlePostfixPP(node *UnaryOpNode) any {
 	return origVal
 }
 
-func (e *Evaluator) handlePostfixMM(node *UnaryOpNode) any {
-	ident, ok := node.Expr.(*IdentifierNode)
+func (e *Evaluator) handlePostfixMM(node *parser.UnaryOpNode) any {
+	ident, ok := node.Expr.(*parser.IdentifierNode)
 	if !ok {
 		e.genError("-- operator requires an identifier",
 			node.Position)

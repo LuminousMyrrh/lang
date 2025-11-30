@@ -2,19 +2,20 @@ package eval
 
 import (
 	"fmt"
+	"lang/internal/parser"
 )
 
-func (e *Evaluator) evalArray(arr *ArrayNode) any {
+func (e *Evaluator) evalArray(arr *parser.ArrayNode) any {
 	var values []any
 
 	for _, el := range arr.Elements {
 		values = append(values, e.eval(el))
 	}
 
-	return values;
+	return values
 }
 
-func (e *Evaluator) evalArrayAccess(stmt *ArrayAccessNode) any {
+func (e *Evaluator) evalArrayAccess(stmt *parser.ArrayAccessNode) any {
 	// Recursively evaluate the target to get the array value
 	arr := unwrapBuiltinValue(e.eval(stmt.Target))
 	if arr == nil {
@@ -32,33 +33,35 @@ func (e *Evaluator) evalArrayAccess(stmt *ArrayAccessNode) any {
 
 	// Check if arr is actually an array
 	switch a := arr.(type) {
-	case []any: {
-		if i < 0 || i >= len(a) {
-			e.genError(fmt.Sprintf("Index %d out of bounds", i),
-				stmt.Position)
-			return nil
+	case []any:
+		{
+			if i < 0 || i >= len(a) {
+				e.genError(fmt.Sprintf("Index %d out of bounds", i),
+					stmt.Position)
+				return nil
+			}
+			return a[i]
 		}
-		return a[i]
-	}
-	case string: {
-		runes := []rune(a)
-		if i < 0 || i >= len(runes) {
-			e.genError(fmt.Sprintf("Index %d out of bounds", i), stmt.Position)
-			return nil
+	case string:
+		{
+			runes := []rune(a)
+			if i < 0 || i >= len(runes) {
+				e.genError(fmt.Sprintf("Index %d out of bounds", i), stmt.Position)
+				return nil
+			}
+			return e.createString(string(runes[i]))
 		}
-		return e.createString(string(runes[i]))
-	}
 	default:
 		e.genError(fmt.Sprintf(
 			"Target has incorrect type. It should be array: %T",
 			a,
-			), stmt.Position)
+		), stmt.Position)
 		return nil
 	}
 
 }
 
-func (e *Evaluator) evalArrayAssign(stmt *ArrayAssign) any {
+func (e *Evaluator) evalArrayAssign(stmt *parser.ArrayAssign) any {
 	// stmt.Target is an ArrayAccessNode (possibly nested)
 	// Descend to the parent array and index
 	var parent any
@@ -67,9 +70,9 @@ func (e *Evaluator) evalArrayAssign(stmt *ArrayAssign) any {
 	// Unwind nested ArrayAccessNodes to get to the parent array and final index
 	target := stmt.Target
 	for {
-		if access, ok := target.(*ArrayAccessNode); ok {
+		if access, ok := target.(*parser.ArrayAccessNode); ok {
 			// If the target itself is an ArrayAccessNode, keep going
-			if inner, ok := access.Target.(*ArrayAccessNode); ok {
+			if inner, ok := access.Target.(*parser.ArrayAccessNode); ok {
 				target = inner
 				continue
 			}
@@ -95,7 +98,7 @@ func (e *Evaluator) evalArrayAssign(stmt *ArrayAssign) any {
 		e.genError(fmt.Sprintf(
 			"Target has incorrect type. It should be array: %T",
 			parent,
-			), stmt.Position)
+		), stmt.Position)
 		return nil
 	}
 	if index < 0 || index >= len(arr) {

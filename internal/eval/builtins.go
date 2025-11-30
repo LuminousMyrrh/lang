@@ -269,7 +269,7 @@ func builtinWrite(e *Evaluator, args []parser.Node, pos parser.Position) any {
 	}
 }
 
-func (e *Evaluator) initBuiltintClasses() {
+func (e *Evaluator)  initBuiltintClasses() {
 	stringEnv := env.NewEnv(nil, "string")
 	stringEnv.AddVarSymbol(
 		"value",
@@ -292,35 +292,21 @@ func (e *Evaluator) initBuiltintClasses() {
 	e.currentEnv.AddStructSymbol("float", floatEnv)
 }
 
-func (e *Evaluator) initBuiltintMethods() int {
-	stringEnv := e.currentEnv.FindStructSymbol("string")
-	if stringEnv != nil {
-		stringEnv.Symbols["substring"] = &env.FuncSymbol{
-			NativeFunc: stringSubstring,
-			TypeName:   "string",
-		}
-		stringEnv.Symbols["capitalize"] = &env.FuncSymbol{
-			NativeFunc: stringCapitalize,
-			TypeName:   "string",
-		}
-		stringEnv.Symbols["contains"] = &env.FuncSymbol{
-			NativeFunc: stringContains,
-			TypeName:   "string",
-		}
-		stringEnv.Symbols["empty"] = &env.FuncSymbol{
-			NativeFunc: stringEmpty,
-			TypeName:   "string",
-		}
-		stringEnv.Symbols["isDigit"] = &env.FuncSymbol{
-			NativeFunc: stringIsDigit,
-			TypeName:   "string",
-		}
-		stringEnv.Symbols["isAlph"] = &env.FuncSymbol{
-			NativeFunc: stringIsAlph,
-			TypeName:   "string",
-		}
-	} else {
-		return -1
+func (e *Evaluator) initBuiltinMethods() {
+	builtins := map[string]BuiltinFunction {
+		"printf":  builtinPrintf,
+		"print":   builtinPrint,
+		"println": builtinPrintln,
+		"type":    builtinType,
+		"input":   builtinInput,
+		"int":     builtinInt,
+		"float":   builtinFloat,
+		"string":  builtinString,
+		"len":     builtinLen,
+		"readAll": builtinReadAll,
+		"write":   builtinWrite,
+		"fetch":   builtinFetch,
 	}
-	return 0
+
+	e.Builtins = builtins
 }

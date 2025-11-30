@@ -3,9 +3,10 @@ package eval
 import (
 	"fmt"
 	"lang/internal/env"
+	"lang/internal/parser"
 )
 
-func (e *Evaluator) evalFunctionDef(funcDef *FunctionDefNode) any {
+func (e *Evaluator) evalFunctionDef(funcDef *parser.FunctionDefNode) any {
 	e.currentEnv.AddFuncSymbol(
 		funcDef.Name,
 		funcDef.Parameters,
@@ -15,8 +16,8 @@ func (e *Evaluator) evalFunctionDef(funcDef *FunctionDefNode) any {
 	return 1
 }
 
-func (e *Evaluator) evalFunctionCall(call *FunctionCallNode) any {
-	ident, ok := call.Name.(*IdentifierNode)
+func (e *Evaluator) evalFunctionCall(call *parser.FunctionCallNode) any {
+	ident, ok := call.Name.(*parser.IdentifierNode)
 	if !ok {
 		e.genError("Function call must be on an identifier",
 			call.Position)
@@ -36,7 +37,7 @@ func (e *Evaluator) evalFunctionCall(call *FunctionCallNode) any {
 		return nil
 	}
 
-	if f, ok := function.(*FuncSymbol); ok {
+	if f, ok := function.(*env.FuncSymbol); ok {
 		params := f.Params
 		if len(call.Args) != len(params) {
 			e.genError(fmt.Sprintf(
@@ -56,7 +57,7 @@ func (e *Evaluator) evalFunctionCall(call *FunctionCallNode) any {
 
 		// 2. Switch to the function's environment
 		prevEnv := e.currentEnv
-		callEnv := NewEnv(f.Env, ident.Name)
+		callEnv := env.NewEnv(f.Env, ident.Name)
 		e.currentEnv = callEnv
 
 		// 3. Add parameters to the new environment
@@ -83,7 +84,7 @@ func (e *Evaluator) evalFunctionCall(call *FunctionCallNode) any {
 	return nil
 }
 
-func (e *Evaluator) evalFuncBlock(block *BlockNode) any {
+func (e *Evaluator) evalFuncBlock(block *parser.BlockNode) any {
 	var result any
 	for _, stmt := range block.Statements {
 		result = e.eval(stmt)

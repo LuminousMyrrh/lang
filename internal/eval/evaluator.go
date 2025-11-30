@@ -25,34 +25,34 @@ type Evaluator struct {
 	Builtins map[string]BuiltinFunction
 }
 
-func NewEvaluator(env *env.Env, entry *parser.ProgramNode) *Evaluator {
-	builtins := map[string]BuiltinFunction {
-		"printf":   builtinPrintf,
-		"print":   builtinPrint,
-		"println": builtinPrintln,
-		"type":    builtinType,
-		"input":   builtinInput,
-		"int":     builtinInt,
-		"float":   builtinFloat,
-		"string":  builtinString,
-		"len":     builtinLen,
-		"readAll": builtinReadAll,
-		"write":   builtinWrite,
-		"fetch":   builtinFetch,
-	}
-
-	return &Evaluator{
+func NewEvaluatorAutoEnv(entry *parser.ProgramNode) *Evaluator {
+	env := env.NewEnv(nil, "global")
+	evaluator := Evaluator{
 		Environment: env,
 		Entry: entry,
 		currentEnv: env,
-		Builtins: builtins,
 	}
+
+	evaluator.initBuiltintClasses()
+	evaluator.initBuiltinMethods()
+
+	return &evaluator
+}
+
+func NewEvaluator(env *env.Env, entry *parser.ProgramNode) *Evaluator {
+	evaluator := Evaluator{
+		Environment: env,
+		Entry: entry,
+		currentEnv: env,
+	}
+
+	evaluator.initBuiltintClasses()
+	evaluator.initBuiltinMethods()
+
+	return &evaluator
 }
 
 func (e *Evaluator) Eval() {
-	e.initBuiltintClasses()
-	e.initBuiltintMethods()
-
 	for _, stmt := range e.Entry.Nodes{
 		if e.eval(stmt) == nil {
 			return
@@ -140,4 +140,34 @@ func (e *Evaluator) createString(value string) *env.Env {
 	instEnv := env.NewEnv(stringEnv, "string")
 	instEnv.AddVarSymbol("value", "string", value)
 	return instEnv
+}
+
+func (e *Evaluator) InitStringBuiltin() {
+	stringSymbol := e.Environment.FindStructSymbol("string")
+	if stringSymbol != nil {
+		stringSymbol.Symbols["substring"] = &env.FuncSymbol{
+			NativeFunc: stringSubstring,
+			TypeName:   "string",
+		}
+		stringSymbol.Symbols["capitalize"] = &env.FuncSymbol{
+			NativeFunc: stringCapitalize,
+			TypeName:   "string",
+		}
+		stringSymbol.Symbols["contains"] = &env.FuncSymbol{
+			NativeFunc: stringContains,
+			TypeName:   "string",
+		}
+		stringSymbol.Symbols["empty"] = &env.FuncSymbol{
+			NativeFunc: stringEmpty,
+			TypeName:   "string",
+		}
+		stringSymbol.Symbols["isDigit"] = &env.FuncSymbol{
+			NativeFunc: stringIsDigit,
+			TypeName:   "string",
+		}
+		stringSymbol.Symbols["isAlph"] = &env.FuncSymbol{
+			NativeFunc: stringIsAlph,
+			TypeName:   "string",
+		}
+	}
 }

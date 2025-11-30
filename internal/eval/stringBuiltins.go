@@ -3,6 +3,7 @@ package eval
 import (
 	"errors"
 	"fmt"
+	"lang/internal/core"
 	"lang/internal/env"
 	"lang/internal/parser"
 	"strings"
@@ -28,7 +29,7 @@ func getValue(self *env.Env) (string, error) {
 	return s, nil
 }
 
-func stringSubstring(e *Evaluator, self *env.Env, args []any, pos parser.Position) any {
+func stringSubstring(e core.EvaluatorInterface, self *env.Env, args []any, pos parser.Position) any {
 	s, err := getValue(self)
 	if err != nil {
 		e.genError(err.Error(), pos)
@@ -55,7 +56,7 @@ func stringSubstring(e *Evaluator, self *env.Env, args []any, pos parser.Positio
 	return s[from : to+1]
 }
 
-func stringCapitalize(e *Evaluator, self *env.Env, args []any, pos parser.Position) any {
+func stringCapitalize(e core.EvaluatorInterface, self *env.Env, args []any, pos parser.Position) any {
 	if len(args) != 0 {
 		e.genError("'capitalize' doesn't accept any arguments", pos)
 		return nil
@@ -73,7 +74,7 @@ func stringCapitalize(e *Evaluator, self *env.Env, args []any, pos parser.Positi
 	return nilValue{}
 }
 
-// func stringFind(e *Evaluator, self *env.Env, args []any, pos parser.Position) any {
+// func stringFind(e core.EvaluatorInterface, self *env.Env, args []any, pos parser.Position) any {
 // 	if len(args) < 2 || len(args) > 3 {
 // 		e.genError("'find' should have at least two arguments", pos)
 // 		return nil
@@ -111,7 +112,7 @@ func stringCapitalize(e *Evaluator, self *env.Env, args []any, pos parser.Positi
 // 	return index
 // }
 
-func stringContains(e *Evaluator, self *env.Env, args []any, pos parser.Position) any {
+func stringContains(e core.EvaluatorInterface, self *env.Env, args []any, pos parser.Position) any {
 	if len(args) != 1 {
 		e.genError("'contains' accept exactly one argument", pos)
 		return nil
@@ -132,7 +133,7 @@ func stringContains(e *Evaluator, self *env.Env, args []any, pos parser.Position
 	return strings.Contains(s, subs)
 }
 
-func stringEmpty(e *Evaluator, self *env.Env, args []any, pos parser.Position) any {
+func stringEmpty(e core.EvaluatorInterface, self *env.Env, args []any, pos parser.Position) any {
 	if len(args) != 0 {
 		e.genError("'empty' doesn't accent any arguments", pos)
 		return nil
@@ -147,7 +148,7 @@ func stringEmpty(e *Evaluator, self *env.Env, args []any, pos parser.Position) a
 	return len(s) == 0
 }
 
-func stringIsDigit(e *Evaluator, self *env.Env, args []any, pos parser.Position) any {
+func stringIsDigit(e core.EvaluatorInterface, self *env.Env, args []any, pos parser.Position) any {
 	if len(args) != 0 {
 		e.genError("'empty' doesn't accent any arguments", pos)
 		return nil
@@ -168,7 +169,7 @@ func stringIsDigit(e *Evaluator, self *env.Env, args []any, pos parser.Position)
 	return true
 }
 
-func stringIsAlph(e *Evaluator, self *env.Env, args []any, pos parser.Position) any {
+func stringIsAlph(e core.EvaluatorInterface, self *env.Env, args []any, pos parser.Position) any {
 	if len(args) != 0 {
 		e.genError("'empty' doesn't accent any arguments", pos)
 		return nil

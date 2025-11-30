@@ -12,6 +12,10 @@ type Lexer struct {
 	currentColumn int
 }
 
+func NewLexer() *Lexer {
+	return &Lexer{}
+}
+
 func (l *Lexer) Read(s string) ([]*token.Token, error) {
 	l.source = []rune(s)
 	length := len(l.source)
