@@ -25,7 +25,6 @@ func builtinPrint(e *Evaluator, args []parser.Node, pos parser.Position) any {
 		val := env.UnwrapBuiltinValue(e.EvalNode(arg))
 		fmt.Print(val)
 	}
-	fmt.Println()
 	return core.NilValue{}
 }
 

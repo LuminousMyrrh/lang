@@ -5,17 +5,17 @@ import (
 )
 
 type Position struct {
-	Row int
+	Row    int
 	Column int
 }
 
 type Node interface {
-    String() string
+	String() string
 }
 
 // Root node for the entire program
 type ProgramNode struct {
-    Nodes []Node // List of statements or declarations
+	Nodes []Node // List of statements or declarations
 }
 
 func (p ProgramNode) Find(name string) (Node, error) {
@@ -41,16 +41,16 @@ func (p *ProgramNode) Print() {
 	}
 }
 
-type SemicolonNode struct {}
+type SemicolonNode struct{}
 
 func (s *SemicolonNode) String() string {
-	return ";";
+	return ";"
 }
 
 // Literals
 type LiteralNode struct {
 	Position
-    Value any // Can be int, string, bool, etc.
+	Value any // Can be int, string, bool, etc.
 }
 
 func (n *LiteralNode) String() string {
@@ -67,7 +67,7 @@ type TrueNode struct {
 }
 
 func (t *TrueNode) String() string {
-	return "true";
+	return "true"
 }
 
 type FalseNode struct {
@@ -75,13 +75,13 @@ type FalseNode struct {
 }
 
 func (f *FalseNode) String() string {
-	return "false";
+	return "false"
 }
 
 // Identifiers (variable or function names)
 type IdentifierNode struct {
 	Position
-    Name string
+	Name string
 }
 
 func (i *IdentifierNode) String() string {
@@ -95,7 +95,7 @@ type ArrayNode struct {
 
 func (a *ArrayNode) String() string {
 	str := ""
-	for _, el := range a.Elements  {
+	for _, el := range a.Elements {
 		str += el.String()
 	}
 
@@ -105,7 +105,7 @@ func (a *ArrayNode) String() string {
 type ArrayAccessNode struct {
 	Position
 	Target Node
-	Index Node
+	Index  Node
 }
 
 func (a *ArrayAccessNode) String() string {
@@ -115,7 +115,7 @@ func (a *ArrayAccessNode) String() string {
 type ArrayAssign struct {
 	Position
 	Target Node
-	Value Node
+	Value  Node
 }
 
 func (a *ArrayAssign) String() string {
@@ -125,9 +125,9 @@ func (a *ArrayAssign) String() string {
 
 type LogicalExprNode struct {
 	Position
-    Op    string
-    Left  Node
-    Right Node
+	Op    string
+	Left  Node
+	Right Node
 }
 
 func (l *LogicalExprNode) String() string {
@@ -137,20 +137,20 @@ func (l *LogicalExprNode) String() string {
 // Binary operations (e.g., a + b)
 type BinaryOpNode struct {
 	Position
-    Op    string
-    Left  Node
-    Right Node
+	Op    string
+	Left  Node
+	Right Node
 }
 
 func (n *BinaryOpNode) String() string {
-	return fmt.Sprintf("# :%v '%v' :%v #\n",n.Left.String(), n.Op, n.Right.String())
+	return fmt.Sprintf("# :%v '%v' :%v #\n", n.Left.String(), n.Op, n.Right.String())
 }
 
 // Unary operations (e.g., -x, !flag)
 type UnaryOpNode struct {
 	Position
-    Op   string
-    Expr Node
+	Op   string
+	Expr Node
 }
 
 func (n *UnaryOpNode) String() string {
@@ -159,7 +159,7 @@ func (n *UnaryOpNode) String() string {
 
 type StructDefNode struct {
 	Position
-	Name string
+	Name   string
 	Fields []*StructField
 }
 
@@ -176,7 +176,7 @@ func (s *StructDefNode) String() string {
 
 type StructInitNode struct {
 	Position
-	Name string
+	Name       string
 	InitFields []Node
 }
 
@@ -186,8 +186,8 @@ func (s *StructInitNode) String() string {
 
 type StructField struct {
 	Position
-	Name string
-	Value Node
+	Name     string
+	Value    Node
 	IsPublic bool // 0 - private 1 - pub
 }
 
@@ -198,50 +198,49 @@ func (s *StructField) String() string {
 			s.Name,
 			s.IsPublic,
 			s.Value.String(),
-			)
+		)
 	}
 	return fmt.Sprintf(
 		"%s(%v) - (nil)",
 		s.Name,
 		s.IsPublic,
-		)
+	)
 }
-
 
 type StructMethodDef struct {
 	Position
-	IsPub bool
+	IsPub      bool
 	StructName string
 	MethodName string
 	Parameters []string
-	Body *BlockNode
+	Body       *BlockNode
 }
 
 func (s *StructMethodDef) String() string {
-    str := ""
-    if s.IsPub {
-        str += "pub "
-    } else {
-        str += "priv "
-    }
+	str := ""
+	if s.IsPub {
+		str += "pub "
+	} else {
+		str += "priv "
+	}
 
-    str += s.StructName + "->"
-    str += s.MethodName + " "
+	str += s.StructName + "->"
+	str += s.MethodName + " "
 
-    for _, p := range s.Parameters {
-        str += p + " "
-    }
+	for _, p := range s.Parameters {
+		str += p + " "
+	}
 
-    str += "\n"
-    
-    // Always check for nil before dereferencing
-    if s.Body != nil {
-        str += s.Body.String()
-    } else {
-        str += "<nil body>"
-    }
+	str += "\n"
 
-    return str
+	// Always check for nil before dereferencing
+	if s.Body != nil {
+		str += s.Body.String()
+	} else {
+		str += "<nil body>"
+	}
+
+	return str
 }
 
 // could be field call as well
@@ -249,10 +248,10 @@ func (s *StructMethodDef) String() string {
 // self.y()
 type StructMethodCall struct {
 	Position
-	Caller Node
+	Caller     Node
 	MethodName string
-	IsField bool
-	Args []Node
+	IsField    bool
+	Args       []Node
 }
 
 func (s *StructMethodCall) String() string {
@@ -267,8 +266,8 @@ func (s *StructMethodCall) String() string {
 // Variable declaration (e.g., var x = 5)
 type VarDefNode struct {
 	Position
-    Name  string
-    Value Node
+	Name  string
+	Value Node
 }
 
 func (n *VarDefNode) String() string {
@@ -278,9 +277,9 @@ func (n *VarDefNode) String() string {
 // Assignment (e.g., x = 10)
 type AssignmentNode struct {
 	Position
-    Name  Node
-    Value Node
-	Op string
+	Name  Node
+	Value Node
+	Op    string
 }
 
 func (a *AssignmentNode) String() string {
@@ -290,9 +289,9 @@ func (a *AssignmentNode) String() string {
 // Function definition (e.g., func foo(a, b) { ... })
 type FunctionDefNode struct {
 	Position
-    Name       string
-    Parameters []string
-    Body       *BlockNode
+	Name       string
+	Parameters []string
+	Body       *BlockNode
 }
 
 func (f *FunctionDefNode) String() string {
@@ -313,8 +312,8 @@ func (f *FunctionDefNode) String() string {
 // Function call (e.g., foo(a, b))
 type FunctionCallNode struct {
 	Position
-    Name Node
-    Args []Node
+	Name Node
+	Args []Node
 }
 
 func (f *FunctionCallNode) String() string {
@@ -332,7 +331,7 @@ func (f *FunctionCallNode) String() string {
 // Block of statements (e.g., { ... })
 type BlockNode struct {
 	Position
-    Statements []Node
+	Statements []Node
 }
 
 func (b *BlockNode) String() string {
@@ -347,9 +346,9 @@ func (b *BlockNode) String() string {
 // If/Else conditional
 type IfNode struct {
 	Position
-    Condition   Node
-    ThenBranch  *BlockNode
-    ElseBranch  *BlockNode // Can be nil if no else
+	Condition  Node
+	ThenBranch *BlockNode
+	ElseBranch *BlockNode // Can be nil if no else
 }
 
 func (i *IfNode) String() string {
@@ -359,20 +358,20 @@ func (i *IfNode) String() string {
 			i.Condition.String(),
 			i.ThenBranch.String(),
 			i.ElseBranch.String(),
-			)
+		)
 	} else {
 		return fmt.Sprintf("%v %v",
 			i.Condition.String(),
 			i.ThenBranch.String(),
-			)
+		)
 	}
 }
 
 // While loop
 type WhileNode struct {
 	Position
-    Condition Node
-    Body      *BlockNode
+	Condition Node
+	Body      *BlockNode
 }
 
 func (w *WhileNode) String() string {
@@ -382,10 +381,10 @@ func (w *WhileNode) String() string {
 // For loop (basic: for var i = 0; i < 10; i = i + 1 { ... })
 type ForNode struct {
 	Position
-    Init      Node      // e.g., VarDefNode or AssignmentNode
-    Condition Node
-    Post      Node      // e.g., AssignmentNode
-    Body      *BlockNode
+	Init      Node // e.g., VarDefNode or AssignmentNode
+	Condition Node
+	Post      Node // e.g., AssignmentNode
+	Body      *BlockNode
 }
 
 func (f *ForNode) String() string {
@@ -401,13 +400,13 @@ type BreakNode struct {
 }
 
 func (b *BreakNode) String() string {
-	return "break";
+	return "break"
 }
 
 // Return statement
 type ReturnNode struct {
 	Position
-    Value Node // Can be nil for "return"
+	Value Node // Can be nil for "return"
 }
 
 func (r *ReturnNode) String() string {
@@ -418,7 +417,7 @@ func (r *ReturnNode) String() string {
 // Expression statement (e.g., a function call as a statement)
 type ExpressionStatementNode struct {
 	Position
-    Expr Node
+	Expr Node
 }
 
 func (e *ExpressionStatementNode) String() string {
@@ -428,7 +427,7 @@ func (e *ExpressionStatementNode) String() string {
 // import filename > symbol1, symbol2, ...;
 type ImportNode struct {
 	Position
-	File string
+	File    string
 	Symbols []string
 }
 
@@ -441,5 +440,5 @@ type NilNode struct {
 }
 
 func (n *NilNode) String() string {
-	return "nil";
+	return "nil"
 }
