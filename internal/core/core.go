@@ -18,7 +18,7 @@ type SymbolStore map[string]Symbol
 
 type Env interface {
 	Type() string
-	Parent() *Env
+	Parent() Env
 	Symbols() SymbolStore
 }
 
