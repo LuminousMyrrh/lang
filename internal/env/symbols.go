@@ -31,7 +31,7 @@ type FuncSymbol struct {
 	Params     []string
 	TypeName   string
 	Env        *Env
-	NativeFunc func(e core.EvaluatorInterface, self *Env, args []any, pos parser.Position) any
+	NativeFunc func(e core.Evaluator, self *Env, args []any, pos parser.Position) any
 }
 
 func (f *FuncSymbol) Name() string { return "!!Function!!" }

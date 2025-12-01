@@ -2,20 +2,21 @@ package eval
 
 import (
 	"fmt"
+	"lang/internal/core"
 	"lang/internal/parser"
 )
 
 func (e *Evaluator) evalBinary(expr *parser.BinaryOpNode) any {
-	left := unwrapBuiltinValue(e.eval(expr.Left))
-	if ret, ok := left.(returnValue); ok {
-		left = ret.value
+	left := unwrapBuiltinValue(e.EvalNode(expr.Left))
+	if ret, ok := left.(core.ReturnValue); ok {
+		left = ret.Value
 	}
-	right := unwrapBuiltinValue(e.eval(expr.Right))
-	if ret, ok := right.(returnValue); ok {
-		right = ret.value
+	right := unwrapBuiltinValue(e.EvalNode(expr.Right))
+	if ret, ok := right.(core.ReturnValue); ok {
+		right = ret.Value
 	}
 	if (left == nil || right == nil) {
-		e.genError("Expression operand cannot bet nil", expr.Position)
+		e.GenError("Expression operand cannot bet nil", expr.Position)
 		return nil
 	}
 
@@ -29,7 +30,7 @@ func (e *Evaluator) evalBinary(expr *parser.BinaryOpNode) any {
             case float64:
                 return float64(l) + float64(r)
             default:
-                e.genError(
+                e.GenError(
                     "Right operand of '+' must be int or float64 if left is int",
                     expr.Position)
                 return nil
@@ -41,7 +42,7 @@ func (e *Evaluator) evalBinary(expr *parser.BinaryOpNode) any {
             case float64:
                 return l + r
             default:
-                e.genError(
+                e.GenError(
                     "Right operand of '+' must be int or float64 if left is float64",
                     expr.Position)
                 return nil
@@ -49,14 +50,14 @@ func (e *Evaluator) evalBinary(expr *parser.BinaryOpNode) any {
         case string:
             r, ok := right.(string)
             if !ok {
-                e.genError(
+                e.GenError(
                     "Right operand of '+' must be string if left is string",
                     expr.Position)
                 return nil
             }
             return e.createString(l + r)
         default:
-            e.genError("Unsupported type for '+' operator",
+            e.GenError("Unsupported type for '+' operator",
                 expr.Position)
             return nil
         }
@@ -76,7 +77,7 @@ func (e *Evaluator) evalBinary(expr *parser.BinaryOpNode) any {
         case float64:
             lFloat = l
         default:
-            e.genError(fmt.Sprintf(
+            e.GenError(fmt.Sprintf(
                 "Left operand of '%s' must be int or float64", expr.Op),
                 expr.Position)
             return nil
@@ -90,7 +91,7 @@ func (e *Evaluator) evalBinary(expr *parser.BinaryOpNode) any {
         case float64:
             rFloat = r
         default:
-            e.genError(fmt.Sprintf(
+            e.GenError(fmt.Sprintf(
                 "Right operand of '%s' must be int or float64", expr.Op),
                 expr.Position)
             return nil
@@ -105,7 +106,7 @@ func (e *Evaluator) evalBinary(expr *parser.BinaryOpNode) any {
                 return lInt * rInt
             case "/":
                 if rInt == 0 {
-                    e.genError("Division by zero!", expr.Position)
+                    e.GenError("Division by zero!", expr.Position)
                     return nil
                 }
                 return lInt / rInt
@@ -119,7 +120,7 @@ func (e *Evaluator) evalBinary(expr *parser.BinaryOpNode) any {
                 return lFloat * rFloat
             case "/":
                 if rFloat == 0 {
-                    e.genError("Division by zero!", expr.Position)
+                    e.GenError("Division by zero!", expr.Position)
                     return nil
                 }
                 return lFloat / rFloat
@@ -128,14 +129,14 @@ func (e *Evaluator) evalBinary(expr *parser.BinaryOpNode) any {
     default:
         return e.evalLogical(expr)
     }
-    e.genError("Unknown", expr.Position)
+    e.GenError("Unknown", expr.Position)
     return nil
 }
 
 func (e *Evaluator) evalUnary(node *parser.UnaryOpNode) any {
-    value := unwrapBuiltinValue(e.eval(node.Expr))
-    if _, ok := value.(nilValue); ok {
-        e.genError("Value with unary shouldn't be nil!", node.Position)
+    value := unwrapBuiltinValue(e.EvalNode(node.Expr))
+    if _, ok := value.(core.NilValue); ok {
+        e.GenError("Value with unary shouldn't be nil!", node.Position)
         return nil
     }
     switch node.Op {
@@ -153,7 +154,7 @@ func (e *Evaluator) evalUnary(node *parser.UnaryOpNode) any {
         case float64:
             return -v
         }
-        e.genError(fmt.Sprintf(
+        e.GenError(fmt.Sprintf(
             "Unary '-' not supported for type %T", value),
             node.Position)
         return nil
@@ -162,12 +163,12 @@ func (e *Evaluator) evalUnary(node *parser.UnaryOpNode) any {
         if v, ok := value.(bool); ok {
             return !v
         }
-        e.genError(fmt.Sprintf(
+        e.GenError(fmt.Sprintf(
             "Unary '!' not supported for type %T", value),
             node.Position)
         return nil
     default:
-		e.genError("Unsupported unary operator", node.Position)
+		e.GenError("Unsupported unary operator", node.Position)
         return nil
     }
 }
@@ -187,7 +188,7 @@ func (e *Evaluator) evalCondition(condition parser.Node) any {
 	case *parser.StructMethodCall:
 		return e.evalStructMemberAccess(t)
 	default:
-		e.genError(fmt.Sprintf(
+		e.GenError(fmt.Sprintf(
 			"Unsupported type: %T", condition),
 			parser.Position{Row: -1, Column: -1})
 		return nil
@@ -199,7 +200,7 @@ func (e *Evaluator) evalLiteral(lit *parser.LiteralNode) any {
 		if s, ok := lit.Value.(string); ok {
 			return e.createString(s)
 		} else {
-			e.genError("Failed to parse string", lit.Position)
+			e.GenError("Failed to parse string", lit.Position)
 			return nil
 		}
 	}
@@ -217,10 +218,10 @@ func (e *Evaluator) evalFalse() any {
 func (e *Evaluator) evalLogical(node *parser.BinaryOpNode) any {
 	switch node.Op {
 	case "&&": {
-		left := unwrapBuiltinValue(e.eval(node.Left))
+		left := unwrapBuiltinValue(e.EvalNode(node.Left))
 		lBool, ok := left.(bool)
 		if !ok {
-			e.genError(fmt.Sprintf(
+			e.GenError(fmt.Sprintf(
 				"Left operand of '&&' must be bool, got %T", left),
 				node.Position)
 			return nil
@@ -229,10 +230,10 @@ func (e *Evaluator) evalLogical(node *parser.BinaryOpNode) any {
 			return false
 		}
 
-		right := unwrapBuiltinValue(e.eval(node.Right))
+		right := unwrapBuiltinValue(e.EvalNode(node.Right))
 		rBool, ok := right.(bool)
 		if !ok {
-			e.genError(fmt.Sprintf(
+			e.GenError(fmt.Sprintf(
 				"Right operand of '&&' must be bool, got %T", right),
 				node.Position)
 			return nil
@@ -241,10 +242,10 @@ func (e *Evaluator) evalLogical(node *parser.BinaryOpNode) any {
 
 	}
 	case "||": {
-		left := unwrapBuiltinValue(e.eval(node.Left))
+		left := unwrapBuiltinValue(e.EvalNode(node.Left))
 		lBool, ok := left.(bool)
 		if !ok {
-			e.genError(fmt.Sprintf(
+			e.GenError(fmt.Sprintf(
 				"Left operand of '||' must be bool, got %T", left),
 				node.Position)
 			return nil
@@ -253,10 +254,10 @@ func (e *Evaluator) evalLogical(node *parser.BinaryOpNode) any {
 			// Short-circuit: true || _ == true
 			return true
 		}
-		right := unwrapBuiltinValue(e.eval(node.Right))
+		right := unwrapBuiltinValue(e.EvalNode(node.Right))
 		rBool, ok := right.(bool)
 		if !ok {
-			e.genError(fmt.Sprintf(
+			e.GenError(fmt.Sprintf(
 				"Right operand of '||' must be bool, got %T", right),
 				node.Position)
 			return nil
@@ -264,11 +265,11 @@ func (e *Evaluator) evalLogical(node *parser.BinaryOpNode) any {
 		return rBool
 	}
 	}
-	left := unwrapBuiltinValue(e.eval(node.Left))
-	right := unwrapBuiltinValue(e.eval(node.Right))
+	left := unwrapBuiltinValue(e.EvalNode(node.Left))
+	right := unwrapBuiltinValue(e.EvalNode(node.Right))
 
 	if (left == nil || right == nil) {
-		e.genError("Failed to get value", node.Position)
+		e.GenError("Failed to get value", node.Position)
 		return nil
 	}
 
@@ -287,7 +288,7 @@ func (e *Evaluator) evalLogical(node *parser.BinaryOpNode) any {
 					return lStr <= rStr
 				}
 			} else {
-				e.genError(
+				e.GenError(
 					"Rigth operand must be a string for string comp",
 					node.Position)
 				return nil
@@ -296,7 +297,7 @@ func (e *Evaluator) evalLogical(node *parser.BinaryOpNode) any {
 		lInt, lok := left.(int)
 		rInt, rok := right.(int)
 		if !lok || !rok {
-			e.genError(fmt.Sprintf(
+			e.GenError(fmt.Sprintf(
 				"Operator '%s' requires integer operands", node.Op),
 				node.Position)
 			return nil
@@ -313,12 +314,12 @@ func (e *Evaluator) evalLogical(node *parser.BinaryOpNode) any {
 		}
 	case "==", "!=":
 		if left == nil || right == nil {
-			e.genError("Cannot compare nil operands", node.Position)
+			e.GenError("Cannot compare nil operands", node.Position)
 			return nil
 		}
 
 		// if reflect.TypeOf(left) != reflect.TypeOf(right) {
-		// 	e.genError(fmt.Sprintf(
+		// 	e.GenError(fmt.Sprintf(
 		// 		"Operator '%s' requires operands of the same type", node.Op),
 		// 		node.Position)
 		// 	return nil
@@ -331,12 +332,12 @@ func (e *Evaluator) evalLogical(node *parser.BinaryOpNode) any {
 			return !isNilValue(left) && isNilValue(right) || isNilValue(left) && !isNilValue(right) || left != right
 		}
 	default:
-		e.genError(fmt.Sprintf(
+		e.GenError(fmt.Sprintf(
 			"Unknown operator: %s", node.Op),
 			node.Position)
 		return nil
 	}
-	e.genError("Uncaught error happen", node.Position)
+	e.GenError("Uncaught error happen", node.Position)
 	return nil
 }
 
@@ -344,7 +345,7 @@ func (e *Evaluator) evalLogical(node *parser.BinaryOpNode) any {
 func (e *Evaluator) handlePostfixPP(node *parser.UnaryOpNode) any {
 	ident, ok := node.Expr.(*parser.IdentifierNode)
 	if !ok {
-		e.genError("++ operator requires an identifier",
+		e.GenError("++ operator requires an identifier",
 			node.Position)
 		return nil
 	}
@@ -352,7 +353,7 @@ func (e *Evaluator) handlePostfixPP(node *parser.UnaryOpNode) any {
 	val := e.currentEnv.FindSymbol(ident.Name)
 	intVal, ok := val.(int)
 	if !ok {
-		e.genError("++ operator requires integer value",
+		e.GenError("++ operator requires integer value",
 			node.Position)
 		return nil
 	}
@@ -367,7 +368,7 @@ func (e *Evaluator) handlePostfixPP(node *parser.UnaryOpNode) any {
 func (e *Evaluator) handlePostfixMM(node *parser.UnaryOpNode) any {
 	ident, ok := node.Expr.(*parser.IdentifierNode)
 	if !ok {
-		e.genError("-- operator requires an identifier",
+		e.GenError("-- operator requires an identifier",
 			node.Position)
 		return nil
 	}
@@ -375,7 +376,7 @@ func (e *Evaluator) handlePostfixMM(node *parser.UnaryOpNode) any {
 	val := e.currentEnv.FindSymbol(ident.Name)
 	intVal, ok := val.(int)
 	if !ok {
-		e.genError("-- operator requires integer value",
+		e.GenError("-- operator requires integer value",
 			node.Position)
 		return nil
 	}
@@ -388,6 +389,6 @@ func (e *Evaluator) handlePostfixMM(node *parser.UnaryOpNode) any {
 }
 
 func isNilValue(x any) bool {
-    _, ok := x.(nilValue)
+    _, ok := x.(core.NilValue)
     return ok
 }

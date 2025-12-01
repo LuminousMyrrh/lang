@@ -27,3 +27,16 @@ func (e *Env) String() string {
 	return strings.Join(lines, "\n")
 }
 
+func UnwrapBuiltinValue(v any) any {
+    if instEnv, ok := v.(*Env); ok {
+        if instEnv.Parent != nil {
+            pName := instEnv.Parent.Type
+            if pName == "string" || pName == "int" || pName == "float" {
+                if valueSym, ok := instEnv.Symbols["value"]; ok {
+                    return valueSym.Value()
+                }
+            }
+        }
+    }
+    return v
+}

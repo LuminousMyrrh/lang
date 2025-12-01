@@ -3,12 +3,13 @@ package eval
 import (
 	"errors"
 	"fmt"
+	"lang/internal/core"
 	"lang/internal/env"
 	"lang/internal/parser"
 	"unicode"
 )
 
-func (e *Evaluator) genError(msg string, pos parser.Position) {
+func (e *Evaluator) GenError(msg string, pos parser.Position) {
 	e.Errors = append(
 		e.Errors, errors.New(fmt.Sprintf(
 			"%d, %d: %s",
@@ -33,10 +34,10 @@ func (e *Evaluator) resolveType(value any, pos parser.Position) string {
 		return v.Type
 	case []any:
 		return "[]"
-	case nilValue:
+	case core.NilValue:
 		return "nil"
 	default:
-		e.genError(fmt.Sprintf("Unknown type '%v'", v), pos)
+		e.GenError(fmt.Sprintf("Unknown type '%v'", v), pos)
 		return ""
 	}
 }
@@ -50,16 +51,3 @@ func capitalizeFirstLetter(s string) string {
     return string(runes)
 }
 
-func UnwrapBuiltinValue(v any) any {
-    if instEnv, ok := v.(*env.Env); ok {
-        if instEnv.Parent != nil {
-            pName := instEnv.Parent.Type
-            if pName == "string" || pName == "int" || pName == "float" {
-                if valueSym, ok := instEnv.Symbols["value"]; ok {
-                    return valueSym.Value()
-                }
-            }
-        }
-    }
-    return v
-}

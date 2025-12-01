@@ -2,6 +2,7 @@ package eval
 
 import (
 	"fmt"
+	"lang/internal/core"
 	"lang/internal/env"
 	"lang/internal/parser"
 )
@@ -19,7 +20,7 @@ func (e *Evaluator) evalFunctionDef(funcDef *parser.FunctionDefNode) any {
 func (e *Evaluator) evalFunctionCall(call *parser.FunctionCallNode) any {
 	ident, ok := call.Name.(*parser.IdentifierNode)
 	if !ok {
-		e.genError("Function call must be on an identifier",
+		e.GenError("Function call must be on an identifier",
 			call.Position)
 		return nil
 	}
@@ -32,7 +33,7 @@ func (e *Evaluator) evalFunctionCall(call *parser.FunctionCallNode) any {
 	// user defined
 	function := e.currentEnv.FindSymbol(ident.Name)
 	if function == nil {
-		e.genError(fmt.Sprintf("Function '%s' not found", call.Name),
+		e.GenError(fmt.Sprintf("Function '%s' not found", call.Name),
 			call.Position)
 		return nil
 	}
@@ -40,7 +41,7 @@ func (e *Evaluator) evalFunctionCall(call *parser.FunctionCallNode) any {
 	if f, ok := function.(*env.FuncSymbol); ok {
 		params := f.Params
 		if len(call.Args) != len(params) {
-			e.genError(fmt.Sprintf(
+			e.GenError(fmt.Sprintf(
 					"Function '%s' accepts %d, but passed only %d",
 					call.Name,
 					len(params),
@@ -52,7 +53,7 @@ func (e *Evaluator) evalFunctionCall(call *parser.FunctionCallNode) any {
 
 		argValues := make([]any, len(call.Args))
 		for i, arg := range call.Args {
-			argValues[i] = e.eval(arg)
+			argValues[i] = e.EvalNode(arg)
 		}
 
 		// 2. Switch to the function's environment
@@ -69,10 +70,10 @@ func (e *Evaluator) evalFunctionCall(call *parser.FunctionCallNode) any {
 		// 4. Evaluate the function body
 		var result any
 		for _, stmt := range f.Body.Statements {
-			result = e.eval(stmt)
-			if ret, ok := result.(returnValue); ok {
+			result = e.EvalNode(stmt)
+			if ret, ok := result.(core.ReturnValue); ok {
 				e.currentEnv = prevEnv
-				return ret.value
+				return ret.Value
 			}
 		}
 
@@ -80,15 +81,15 @@ func (e *Evaluator) evalFunctionCall(call *parser.FunctionCallNode) any {
 		return result
 
 	}
-	e.genError("Something very very wrong here", call.Position)
+	e.GenError("Something very very wrong here", call.Position)
 	return nil
 }
 
 func (e *Evaluator) evalFuncBlock(block *parser.BlockNode) any {
 	var result any
 	for _, stmt := range block.Statements {
-		result = e.eval(stmt)
-		if ret, ok := result.(returnValue); ok {
+		result = e.EvalNode(stmt)
+		if ret, ok := result.(core.ReturnValue); ok {
 			return ret
 		}
 	}

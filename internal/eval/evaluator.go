@@ -2,18 +2,11 @@ package eval
 
 import (
 	"fmt"
+	"lang/internal/core"
 	"lang/internal/env"
 	"lang/internal/lexer"
 	"lang/internal/parser"
 )
-
-type returnValue struct {
-    value any
-}
-
-type breakSignal struct {}
-
-type nilValue struct {}
 
 type Evaluator struct {
 	Entry *parser.ProgramNode
@@ -54,7 +47,7 @@ func NewEvaluator(env *env.Env, entry *parser.ProgramNode) *Evaluator {
 
 func (e *Evaluator) Eval() {
 	for _, stmt := range e.Entry.Nodes{
-		if e.eval(stmt) == nil {
+		if e.EvalNode(stmt) == nil {
 			return
 		}
 	}
@@ -62,11 +55,11 @@ func (e *Evaluator) Eval() {
 	e.Environment = e.currentEnv
 }
 
-func (e *Evaluator) eval(stmt parser.Node) any {
+func (e *Evaluator) EvalNode(stmt parser.Node) any {
     // fmt.Printf("eval node type: %T\n", stmt)
     res := e.evalX(stmt)  // actual dispatch
-    if _, ok := res.(returnValue); ok {
-        // fmt.Printf("eval returned returnValue wrapping: %v\n", ret.value)
+    if _, ok := res.(core.ReturnValue); ok {
+        // fmt.Printf("eval returned core.ReturnValue wrapping: %v\n", ret.value)
     } else {
         //fmt.Printf("eval returned: %v\n", res)
     }
@@ -74,7 +67,6 @@ func (e *Evaluator) eval(stmt parser.Node) any {
 }
 
 func (e *Evaluator) evalX(stmt parser.Node) any {
-
 	switch s := stmt.(type) {
 	case *parser.VarDefNode:
 		return e.evalVarDef(s)
@@ -125,7 +117,7 @@ func (e *Evaluator) evalX(stmt parser.Node) any {
 	case *parser.NilNode:
 		return e.evalNil(s)
 	default: {
-		e.genError(fmt.Sprintf(
+		e.GenError(fmt.Sprintf(
 			"Unknown node type: %T", s), parser.Position{Row: -1, Column: -1})
 		return nil
 	}

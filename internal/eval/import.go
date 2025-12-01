@@ -12,7 +12,7 @@ func (e *Evaluator) evalImport(stmt *parser.ImportNode) any {
 	fileName := stmt.File + ".lang"
 	data, err := os.ReadFile(fileName)
 	if err != nil {
-		e.genError(fmt.Sprintf(
+		e.GenError(fmt.Sprintf(
 			"Failed to read imported file: %s", err),
 			stmt.Position,
 			)
@@ -23,7 +23,7 @@ func (e *Evaluator) evalImport(stmt *parser.ImportNode) any {
 	e.lexer = &lexer.Lexer{};
 	toks, err := e.lexer.Read(content)
 	if err != nil {
-		e.genError(fmt.Sprintf("Failed to read file: %s", err),
+		e.GenError(fmt.Sprintf("Failed to read file: %s", err),
 			stmt.Position,
 			)
 		return nil
@@ -67,7 +67,7 @@ func (e *Evaluator) evalImport(stmt *parser.ImportNode) any {
 				strEnv := e.currentEnv.FindStructSymbol(def.StructName)
 				e.currentEnv = importEnv
 				if strEnv == nil {
-					e.genError(fmt.Sprintf(
+					e.GenError(fmt.Sprintf(
 						"Class '%s' not found",
 						def.StructName,
 						), def.Position)
@@ -100,10 +100,10 @@ func (e *Evaluator) evalImport(stmt *parser.ImportNode) any {
 		for _, symbol := range stmt.Symbols {
 			node, err := mnode.Find(symbol)
 			if err != nil {
-				e.genError(err.Error(), stmt.Position)
+				e.GenError(err.Error(), stmt.Position)
 				return nil
 			}
-			e.eval(node)
+			e.EvalNode(node)
 		}
 		return 1
 

@@ -1,6 +1,7 @@
 package eval
 
 import (
+	"lang/internal/core"
 	"lang/internal/env"
 	"lang/internal/parser"
 )
@@ -11,8 +12,8 @@ func (e *Evaluator) evalBlock(block *parser.BlockNode) any {
 	e.currentEnv = blockEnv
 	var result any
 	for _, stmt := range block.Statements {
-		result = e.eval(stmt)
-		if _, ok := result.(returnValue); ok || result != nil {
+		result = e.EvalNode(stmt)
+		if _, ok := result.(core.ReturnValue); ok || result != nil {
 			e.currentEnv = prevEnv
 			return result
 		}
@@ -24,18 +25,18 @@ func (e *Evaluator) evalBlock(block *parser.BlockNode) any {
 func (e *Evaluator) evalIf(stmt *parser.IfNode) any {
 	cond := e.evalCondition(stmt.Condition)
 	if cond == nil {
-		e.genError("Condition doesn't exist", stmt.Position)
+		e.GenError("Condition doesn't exist", stmt.Position)
 		return nil
 	}
 	if cond == true && stmt.ThenBranch != nil {
-		res := e.eval(stmt.ThenBranch)
-		if ret, ok := res.(returnValue); ok {
+		res := e.EvalNode(stmt.ThenBranch)
+		if ret, ok := res.(core.ReturnValue); ok {
 			return ret
 		}
 		return res
 	} else if stmt.ElseBranch != nil {
-		res := e.eval(stmt.ElseBranch)
-		if ret, ok := res.(returnValue); ok {
+		res := e.EvalNode(stmt.ElseBranch)
+		if ret, ok := res.(core.ReturnValue); ok {
 			return ret
 		}
 		return res
@@ -47,10 +48,10 @@ func (e *Evaluator) evalIf(stmt *parser.IfNode) any {
 func (e *Evaluator) evalWhile(stmt *parser.WhileNode) any {
 	var result any
 	for {
-		cond := e.eval(stmt.Condition)
+		cond := e.EvalNode(stmt.Condition)
 		b, ok := cond.(bool)
 		if !ok {
-			e.genError("While loop condition should return bool",
+			e.GenError("While loop condition should return bool",
 				stmt.Position)
 			return nil
 		}
@@ -58,10 +59,10 @@ func (e *Evaluator) evalWhile(stmt *parser.WhileNode) any {
 			break
 		}
 		bodyResult := e.evalLoopBlock(stmt.Body)
-		if _, isBreak := bodyResult.(breakSignal); isBreak {
+		if _, isBreak := bodyResult.(core.BreakSignal); isBreak {
 			break
 		}
-		if ret, isReturn := bodyResult.(returnValue); isReturn {
+		if ret, isReturn := bodyResult.(core.ReturnValue); isReturn {
 			return ret
 		}
 		result = bodyResult
@@ -75,7 +76,7 @@ func (e *Evaluator) evalFor(stmt *parser.ForNode) any {
 	case *parser.VarDefNode:
 		{
 			if v != nil {
-				val := e.eval(v.Value)
+				val := e.EvalNode(v.Value)
 				e.currentEnv.AddVarSymbol(
 					v.Name,
 					e.resolveType(val, v.Position),
@@ -85,15 +86,15 @@ func (e *Evaluator) evalFor(stmt *parser.ForNode) any {
 	case *parser.AssignmentNode:
 		{
 			if v != nil {
-				e.eval(v)
+				e.EvalNode(v)
 			}
 		}
 	}
 	for {
-		cond := e.eval(stmt.Condition)
+		cond := e.EvalNode(stmt.Condition)
 		b, ok := cond.(bool)
 		if !ok {
-			e.genError("For loop condition should return bool",
+			e.GenError("For loop condition should return bool",
 				stmt.Position)
 			return nil
 		}
@@ -104,21 +105,21 @@ func (e *Evaluator) evalFor(stmt *parser.ForNode) any {
 		if bodyResult == nil {
 			return nil
 		}
-		if _, isBreak := bodyResult.(breakSignal); isBreak {
+		if _, isBreak := bodyResult.(core.BreakSignal); isBreak {
 			break
 		}
-		if ret, isRet := bodyResult.(returnValue); isRet {
+		if ret, isRet := bodyResult.(core.ReturnValue); isRet {
 			return ret
 		}
 		result = bodyResult
-		e.eval(stmt.Post)
+		e.EvalNode(stmt.Post)
 	}
 	return result
 }
 
 func (e *Evaluator) evalReturn(ret *parser.ReturnNode) any {
-	val := e.eval(ret.Value)
-	return returnValue{val}
+	val := e.EvalNode(ret.Value)
+	return core.ReturnValue{Value: val}
 }
 
 func (e *Evaluator) evalLoopBlock(block *parser.BlockNode) any {
@@ -126,14 +127,14 @@ func (e *Evaluator) evalLoopBlock(block *parser.BlockNode) any {
 	prevEnv := e.currentEnv
 	e.currentEnv = blockEnv
 
-	var result any = nilValue{}
+	var result any = core.NilValue{}
 	for _, stmt := range block.Statements {
-		result := e.eval(stmt)
+		result := e.EvalNode(stmt)
 		if _, ok := stmt.(*parser.BreakNode); ok {
 			e.currentEnv = prevEnv
-			return breakSignal{}
+			return core.BreakSignal{}
 		}
-		if ret, ok := result.(returnValue); ok {
+		if ret, ok := result.(core.ReturnValue); ok {
 			e.currentEnv = prevEnv
 			return ret
 		}

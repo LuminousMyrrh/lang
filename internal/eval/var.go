@@ -2,31 +2,32 @@ package eval
 
 import (
 	"fmt"
+	"lang/internal/core"
 	"lang/internal/env"
 	"lang/internal/parser"
 )
 
 func (e *Evaluator) evalVarDef(stmt *parser.VarDefNode) any {
 	if e.currentEnv.SymbolExists(stmt.Name) {
-		e.genError(fmt.Sprintf(
+		e.GenError(fmt.Sprintf(
 			"Var '%s' already exists", stmt.Name),
 			stmt.Position)
 		return nil
 	}
-	value := e.eval(stmt.Value)
+	value := e.EvalNode(stmt.Value)
 	var_type := e.resolveType(value, stmt.Position)
 	e.currentEnv.AddVarSymbol(stmt.Name, var_type, value)
 	return value
 }
 
 func (e *Evaluator) evalNil(stmt *parser.NilNode) any {
-	return nilValue{}
+	return core.NilValue{}
 }
 
 func (e *Evaluator) evalIdentifier(id *parser.IdentifierNode) any {
 	i := e.currentEnv.FindSymbol(id.Name)
 	if i == nil {
-		e.genError(fmt.Sprintf(
+		e.GenError(fmt.Sprintf(
 			"Unknown identifier '%s'", id.Name),
 			id.Position)
 		return nil
@@ -42,17 +43,17 @@ func (e *Evaluator) evalAssignment(a *parser.AssignmentNode) any {
 	case *parser.IdentifierNode:
 		{
 			if !e.currentEnv.SymbolExists(target.Name) {
-				e.genError(fmt.Sprintf(
+				e.GenError(fmt.Sprintf(
 					"Variable '%s' does not exist",
 					target.Name),
 					a.Position)
 				return nil
 			}
 
-			value := e.eval(a.Value)
+			value := e.EvalNode(a.Value)
 			existing := e.currentEnv.FindSymbol(target.Name)
 			if existing == nil {
-				e.genError(fmt.Sprintf(
+				e.GenError(fmt.Sprintf(
 					"Variable '%s' not found", target.Name),
 					target.Position,
 				)
@@ -61,7 +62,7 @@ func (e *Evaluator) evalAssignment(a *parser.AssignmentNode) any {
 
 			sym, ok := existing.(env.Symbol)
 			if !ok {
-				e.genError(fmt.Sprintf(
+				e.GenError(fmt.Sprintf(
 					"'%s' is not a valid symbol",
 					target.Name),
 					target.Position,
@@ -91,7 +92,7 @@ func (e *Evaluator) evalAssignment(a *parser.AssignmentNode) any {
 						return st
 					}
 				}
-				e.genError(fmt.Sprintf(
+				e.GenError(fmt.Sprintf(
 					"Unsupported types for '+=': %T and %T", currentVal, value),
 					target.Position,
 				)
@@ -104,7 +105,7 @@ func (e *Evaluator) evalAssignment(a *parser.AssignmentNode) any {
 					e.currentEnv.UpdateSymbol(target.Name, curr-val, "int")
 					return curr - val
 				}
-				e.genError(fmt.Sprintf(
+				e.GenError(fmt.Sprintf(
 					"Unsupported types for '-=': %T and %T", currentVal, value),
 					target.Position,
 				)
@@ -116,7 +117,7 @@ func (e *Evaluator) evalAssignment(a *parser.AssignmentNode) any {
 				return value
 
 			default:
-				e.genError(fmt.Sprintf(
+				e.GenError(fmt.Sprintf(
 					"Unsupported assignment operator: '%s'", a.Op),
 					target.Position,
 				)
@@ -128,7 +129,7 @@ func (e *Evaluator) evalAssignment(a *parser.AssignmentNode) any {
 		{
 			// Struct field assignment: obj.field = ...
 			if !target.IsField || len(target.Args) > 0 {
-				e.genError(
+				e.GenError(
 					"Assignment target must be a field access, not a method call",
 					target.Position,
 				)
@@ -137,7 +138,7 @@ func (e *Evaluator) evalAssignment(a *parser.AssignmentNode) any {
 			// Caller must be an identifier (e.g., self, point)
 			callerIdent, ok := target.Caller.(*parser.IdentifierNode)
 			if !ok {
-				e.genError(
+				e.GenError(
 					"Struct field assignment target must be an identifier",
 					target.Position,
 				)
@@ -146,22 +147,22 @@ func (e *Evaluator) evalAssignment(a *parser.AssignmentNode) any {
 			sym := e.currentEnv.FindSymbol(callerIdent.Name)
 			varSym, ok := sym.(*env.VarSymbol)
 			if !ok {
-				e.genError(fmt.Sprintf(
+				e.GenError(fmt.Sprintf(
 					"'%s' is not a variable", callerIdent.Name),
 					target.Position,
 				)
 				return nil
 			}
-			instanceEnv, ok := varSym.Value().(*Env)
+			instanceEnv, ok := varSym.Value().(*env.Env)
 			if !ok {
-				e.genError(fmt.Sprintf(
+				e.GenError(fmt.Sprintf(
 					"'%s' is not a struct instance", callerIdent.Name),
 					target.Position,
 				)
 				return nil
 			}
 			if !instanceEnv.SymbolExistsInCurrent(target.MethodName) {
-				e.genError(fmt.Sprintf(
+				e.GenError(fmt.Sprintf(
 					"Field '%s' does not exist in struct '%s'",
 					target.MethodName,
 					callerIdent.Name),
@@ -169,7 +170,7 @@ func (e *Evaluator) evalAssignment(a *parser.AssignmentNode) any {
 				)
 				return nil
 			}
-			value := e.eval(a.Value)
+			value := e.EvalNode(a.Value)
 			instanceEnv.UpdateSymbol(target.MethodName,
 				value, e.resolveType(value, target.Position))
 			return value
@@ -179,23 +180,23 @@ func (e *Evaluator) evalAssignment(a *parser.AssignmentNode) any {
 		{
 			// Unwrap the identifier
 			arrNameNode := target.Target
-			indexValue := e.eval(target.Index)
+			indexValue := e.EvalNode(target.Index)
 			indexInt, ok := indexValue.(int)
 			if !ok {
-				e.genError("Array index must be an integer",
+				e.GenError("Array index must be an integer",
 					target.Position,
 				)
 				return nil
 			}
 			var name string
 			switch val := arrNameNode.(type) {
-			case *IdentifierNode:
+			case *parser.IdentifierNode:
 				name = val.Name
-			case *StructMethodCall:
+			case *parser.StructMethodCall:
 				name = val.MethodName
 			default:
 				{
-					e.genError(fmt.Sprintf(
+					e.GenError(fmt.Sprintf(
 						"Array assignment target must be an identifier but got: %T",
 						arrNameNode,
 					),
@@ -207,7 +208,7 @@ func (e *Evaluator) evalAssignment(a *parser.AssignmentNode) any {
 			arrSym := e.currentEnv.FindSymbol(name)
 			varSym, ok := arrSym.(*env.VarSymbol)
 			if !ok {
-				e.genError(fmt.Sprintf(
+				e.GenError(fmt.Sprintf(
 					"Variable '%s' is not a VarSymbol",
 					name),
 					target.Position,
@@ -225,7 +226,7 @@ func (e *Evaluator) evalAssignment(a *parser.AssignmentNode) any {
 				}
 			default:
 				{
-					e.genError(fmt.Sprintf(
+					e.GenError(fmt.Sprintf(
 						"Variable '%s' is not an array. Got: %T",
 						name,
 						varSym.Value()),
@@ -236,11 +237,11 @@ func (e *Evaluator) evalAssignment(a *parser.AssignmentNode) any {
 			}
 
 			if indexInt < 0 {
-				e.genError("Negative array index", target.Position)
+				e.GenError("Negative array index", target.Position)
 				return nil
 			}
 
-			value := unwrapBuiltinValue(e.eval(a.Value))
+			value := unwrapBuiltinValue(e.EvalNode(a.Value))
 			if indexInt < len(arr) {
 				// Normal case: overwrite
 				arr[indexInt] = value
@@ -249,7 +250,7 @@ func (e *Evaluator) evalAssignment(a *parser.AssignmentNode) any {
 				arr = append(arr, value)
 			} else {
 				// Trying to set beyond the next element: error
-				e.genError(fmt.Sprintf(
+				e.GenError(fmt.Sprintf(
 					"Index %d is out of range. You can insert only at len(arr)=%d",
 					indexInt, len(arr)),
 					target.Position,
@@ -263,7 +264,7 @@ func (e *Evaluator) evalAssignment(a *parser.AssignmentNode) any {
 			return value
 		}
 	default:
-		e.genError("Invalid assignment target", a.Position)
+		e.GenError("Invalid assignment target", a.Position)
 		return nil
 	}
 }
