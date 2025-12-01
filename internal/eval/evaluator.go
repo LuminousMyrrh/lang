@@ -27,6 +27,7 @@ func NewEvaluatorAutoEnv(entry *parser.ProgramNode) *Evaluator {
 	}
 
 	evaluator.initBuiltintClasses()
+	evaluator.initStringBuiltin()
 	evaluator.initBuiltinMethods()
 
 	return &evaluator
@@ -40,6 +41,7 @@ func NewEvaluator(env *env.Env, entry *parser.ProgramNode) *Evaluator {
 	}
 
 	evaluator.initBuiltintClasses()
+	evaluator.initStringBuiltin()
 	evaluator.initBuiltinMethods()
 
 	return &evaluator
@@ -134,7 +136,7 @@ func (e *Evaluator) createString(value string) *env.Env {
 	return instEnv
 }
 
-func (e *Evaluator) InitStringBuiltin() {
+func (e *Evaluator) initStringBuiltin() {
 	stringSymbol := e.Environment.FindStructSymbol("string")
 	if stringSymbol != nil {
 		stringSymbol.Symbols["substring"] = &env.FuncSymbol{

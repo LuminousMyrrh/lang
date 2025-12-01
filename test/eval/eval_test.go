@@ -1,8 +1,10 @@
 package eval
 
 import (
+	"bytes"
 	"lang/internal/eval"
 	"lang/internal/parser"
+	"os"
 	"testing"
 )
 
@@ -38,3 +40,46 @@ func TestBasic(t *testing.T) {
 	}
 }
 
+func TestVarDeclAndUse(t *testing.T) {
+    // Program:
+    // var x = 42
+    // print(x)
+
+    varDecl := &parser.VarDefNode{
+        Name: "x",
+        Value: &parser.LiteralNode{Value: 42},
+    }
+
+    printCall := &parser.FunctionCallNode{
+        Name: &parser.IdentifierNode{Name: "print"},
+        Args: []parser.Node{
+            &parser.IdentifierNode{Name: "x"},
+        },
+    }
+
+    program := parser.ProgramNode{
+        Nodes: []parser.Node{varDecl, printCall},
+    }
+
+    var buf bytes.Buffer
+    oldStdout := os.Stdout
+    r, w, _ := os.Pipe()
+    os.Stdout = w
+
+    evaluator := eval.NewEvaluatorAutoEnv(&program)
+    evaluator.Eval()
+
+    w.Close()
+    os.Stdout = oldStdout
+    buf.ReadFrom(r)
+    output := buf.String()
+
+    expectedOutput := "42"
+
+    if len(evaluator.Errors) != 0 {
+        t.Fatalf("Unexpected errors: %v", evaluator.Errors)
+    }
+    if output != expectedOutput {
+        t.Errorf("Expected output %q, got %q", expectedOutput, output)
+    }
+}

@@ -61,9 +61,9 @@ func builtinPrintln(e *Evaluator, args []parser.Node, pos parser.Position) any {
 				)
 				return nil
 			}
-			fmt.Print(decoded)
+			fmt.Println(decoded)
 		} else {
-			fmt.Print(val)
+			fmt.Println(val)
 		}
 	}
 	return core.NilValue{}
@@ -269,7 +269,7 @@ func builtinWrite(e *Evaluator, args []parser.Node, pos parser.Position) any {
 	}
 }
 
-func (e *Evaluator)  initBuiltintClasses() {
+func (e *Evaluator) initBuiltintClasses() {
 	stringEnv := env.NewEnv(nil, "string")
 	stringEnv.AddVarSymbol(
 		"value",
@@ -293,7 +293,7 @@ func (e *Evaluator)  initBuiltintClasses() {
 }
 
 func (e *Evaluator) initBuiltinMethods() {
-	builtins := map[string]BuiltinFunction {
+	builtins := map[string]BuiltinFunction{
 		"printf":  builtinPrintf,
 		"print":   builtinPrint,
 		"println": builtinPrintln,

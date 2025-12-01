@@ -2,6 +2,6 @@ var intVar = 10;
 var floatVar = 6.3;
 var stringVar = "simple String";
 
-print(type(intVar));
-print(type(floatVar));
-print(type(stringVar));
+println(type(intVar));
+println(type(floatVar));
+println(type(stringVar));

@@ -198,6 +198,7 @@ func (e *Evaluator) evalCondition(condition parser.Node) any {
 func (e *Evaluator) evalLiteral(lit *parser.LiteralNode) any {
 	if e.resolveType(lit.Value, lit.Position) == "string" {
 		if s, ok := lit.Value.(string); ok {
+			fmt.Printf("Creating string: '%s' \n", s)
 			return e.createString(s)
 		} else {
 			e.GenError("Failed to parse string", lit.Position)

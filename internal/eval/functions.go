@@ -13,7 +13,7 @@ func (e *Evaluator) evalFunctionDef(funcDef *parser.FunctionDefNode) any {
 		funcDef.Parameters,
 		funcDef.Body,
 		env.NewEnv(e.currentEnv, "function"),
-		)
+	)
 	return 1
 }
 
@@ -38,51 +38,53 @@ func (e *Evaluator) evalFunctionCall(call *parser.FunctionCallNode) any {
 		return nil
 	}
 
-	if f, ok := function.(*env.FuncSymbol); ok {
-		params := f.Params
-		if len(call.Args) != len(params) {
-			e.GenError(fmt.Sprintf(
-					"Function '%s' accepts %d, but passed only %d",
-					call.Name,
-					len(params),
-					len(call.Args)),
-				call.Position)
-
-			return nil
-		}
-
-		argValues := make([]any, len(call.Args))
-		for i, arg := range call.Args {
-			argValues[i] = e.EvalNode(arg)
-		}
-
-		// 2. Switch to the function's environment
-		prevEnv := e.currentEnv
-		callEnv := env.NewEnv(f.Env, ident.Name)
-		e.currentEnv = callEnv
-
-		// 3. Add parameters to the new environment
-		for i, val := range argValues {
-			e.currentEnv.AddVarSymbol(f.Params[i],
-				e.resolveType(val, call.Position), val)
-		}
-
-		// 4. Evaluate the function body
-		var result any
-		for _, stmt := range f.Body.Statements {
-			result = e.EvalNode(stmt)
-			if ret, ok := result.(core.ReturnValue); ok {
-				e.currentEnv = prevEnv
-				return ret.Value
-			}
-		}
-
-		e.currentEnv = prevEnv
-		return result
-
+	f, ok := function.(*env.FuncSymbol)
+	if !ok {
+		e.GenError("Something very very wrong here", call.Position)
+		return nil
 	}
-	e.GenError("Something very very wrong here", call.Position)
-	return nil
+
+	params := f.Params
+	if len(call.Args) != len(params) {
+		e.GenError(fmt.Sprintf(
+			"Function '%s' accepts %d, but passed only %d",
+			call.Name,
+			len(params),
+			len(call.Args)),
+			call.Position)
+
+		return nil
+	}
+
+	// 1. Eval args
+	argValues := make([]any, len(call.Args))
+	for i, arg := range call.Args {
+		argValues[i] = e.EvalNode(arg)
+	}
+
+	// 2. Switch to the function's environment
+	prevEnv := e.currentEnv
+	callEnv := env.NewEnv(f.Env, ident.Name)
+	e.currentEnv = callEnv
+
+	// 3. Add parameters to the new environment
+	for i, val := range argValues {
+		e.currentEnv.AddVarSymbol(f.Params[i],
+			e.resolveType(val, call.Position), val)
+	}
+
+	// 4. Evaluate the function body
+	var result any
+	for _, stmt := range f.Body.Statements {
+		result = e.EvalNode(stmt)
+		if ret, ok := result.(core.ReturnValue); ok {
+			e.currentEnv = prevEnv
+			return ret.Value
+		}
+	}
+
+	e.currentEnv = prevEnv
+	return result
 }
 
 func (e *Evaluator) evalFuncBlock(block *parser.BlockNode) any {
@@ -95,4 +97,3 @@ func (e *Evaluator) evalFuncBlock(block *parser.BlockNode) any {
 	}
 	return result
 }
-
