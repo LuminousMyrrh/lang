@@ -12,7 +12,8 @@ import (
 	"strings"
 )
 
-type BuiltinFunction func(e *Evaluator, args []parser.Node, pos parser.Position) any
+type BuiltinFunction func(e *Evaluator,
+		args []parser.Node, pos parser.Position) any
 
 func decodeEscapeSequences(input string) (string, error) {
 	// Wrap in quotes to make it a valid Go string literal

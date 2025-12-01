@@ -33,7 +33,7 @@ func (e *Evaluator) evalIdentifier(id *parser.IdentifierNode) any {
 		return nil
 	}
 
-	val := i.(env.Symbol).Value()
+	val := i.(core.Symbol).Value()
 
 	return val
 }
@@ -60,7 +60,7 @@ func (e *Evaluator) evalAssignment(a *parser.AssignmentNode) any {
 				return nil
 			}
 
-			sym, ok := existing.(env.Symbol)
+			sym, ok := existing.(core.Symbol)
 			if !ok {
 				e.GenError(fmt.Sprintf(
 					"'%s' is not a valid symbol",

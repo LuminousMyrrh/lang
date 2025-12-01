@@ -118,9 +118,15 @@ func stringContains(e core.Evaluator, self *env.Env, args []any, pos parser.Posi
 		return nil
 	}
 
-	subs, ok := args[0].(string)
+	subsEnv, ok := args[0].(*env.Env)
 	if !ok {
 		e.GenError("Argument in 'contains' should be a string", pos)
+		return nil
+	}
+
+	subsValue := subsEnv.FindSymbol("value")
+	subs, ok := subsValue.Value().(string)
+	if !ok {
 		return nil
 	}
 

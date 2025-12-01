@@ -1,10 +1,5 @@
 func main() {
   var test = "this is test string";
-  println("original string:")
-  println(test);
-  println("capitalized string:")
-  test.capitalize();
-  println(test);
 
   if (test.contains("test")) {
     println("it does");

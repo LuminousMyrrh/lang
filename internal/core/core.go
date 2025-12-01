@@ -9,6 +9,19 @@ type Evaluator interface {
     GenError(msg string, pos parser.Position)
 }
 
+type Symbol interface {
+	Value() any
+	Type() string
+}
+
+type SymbolStore map[string]Symbol
+
+type Env interface {
+	Type() string
+	Parent() *Env
+	Symbols() SymbolStore
+}
+
 type ReturnValue struct {
     Value any
 }

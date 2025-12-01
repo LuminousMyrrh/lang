@@ -2,7 +2,6 @@ package eval
 
 import (
 	"fmt"
-	"lang/internal/core"
 	"lang/internal/env"
 	"lang/internal/lexer"
 	"lang/internal/parser"
@@ -60,11 +59,11 @@ func (e *Evaluator) Eval() {
 func (e *Evaluator) EvalNode(stmt parser.Node) any {
     // fmt.Printf("eval node type: %T\n", stmt)
     res := e.evalX(stmt)  // actual dispatch
-    if _, ok := res.(core.ReturnValue); ok {
-        // fmt.Printf("eval returned core.ReturnValue wrapping: %v\n", ret.value)
-    } else {
-        //fmt.Printf("eval returned: %v\n", res)
-    }
+    // if _, ok := res.(core.ReturnValue); ok {
+    //     fmt.Printf("eval returned core.ReturnValue wrapping: %v\n", ret.value)
+    // } else {
+    //     fmt.Printf("eval returned: %v\n", res)
+    // }
     return res
 }
 
@@ -131,6 +130,7 @@ func (e *Evaluator) createString(value string) *env.Env {
 	if stringEnv == nil {
 		return nil
 	}
+
 	instEnv := env.NewEnv(stringEnv, "string")
 	instEnv.AddVarSymbol("value", "string", value)
 	return instEnv

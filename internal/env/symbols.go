@@ -1,7 +1,6 @@
 package env
 
 import (
-	"fmt"
 	"lang/internal/core"
 	"lang/internal/parser"
 )
@@ -13,10 +12,6 @@ import (
 type StructSymbol struct {
 	Environment *Env
 	TypeName    string
-}
-
-func (s *StructSymbol) Name() string {
-	return "Struct: " + s.Environment.String()
 }
 
 func (s *StructSymbol) Value() any   { return s.Environment }
@@ -34,7 +29,6 @@ type FuncSymbol struct {
 	NativeFunc func(e core.Evaluator, self *Env, args []any, pos parser.Position) any
 }
 
-func (f *FuncSymbol) Name() string { return "!!Function!!" }
 func (f *FuncSymbol) Value() any     { return f }
 func (f *FuncSymbol) Type() string   { return f.TypeName }
 
@@ -47,6 +41,5 @@ type VarSymbol struct {
 	typeName string
 }
 
-func (v *VarSymbol) Name() string { return fmt.Sprintf("Var value: %v\n", v.value) }
 func (v *VarSymbol) Value() any     { return v.value }
 func (v *VarSymbol) Type() string   { return v.typeName }

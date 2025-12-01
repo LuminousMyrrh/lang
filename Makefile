@@ -6,6 +6,9 @@ main:
 test:
 	go test ./test/...
 
+m:
+	go build -gcflags=-m -o build/lang cmd/lang/main.go
+
 clean:
 	rm -f $(TARGET)
 	mkdir build

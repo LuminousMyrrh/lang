@@ -1,9 +1,12 @@
 package env
 
-import "lang/internal/parser"
+import (
+	"lang/internal/core"
+	"lang/internal/parser"
+)
 
-func (e *Env) AddVarSymbol(name, typ string, val any) {
-	e.Symbols[name] = &VarSymbol{value: val, typeName: typ}
+func (e *Env) AddVarSymbol(name, varType string, val any) {
+	e.Symbols[name] = &VarSymbol{value: val, typeName: varType}
 }
 
 func (e *Env) AddFuncSymbol(name string, params []string, body *parser.BlockNode, newEnv *Env) {
@@ -40,7 +43,7 @@ func (e *Env) AddStructMethod(
 		}
 
 		if structSym.Environment.Symbols == nil {
-			structSym.Environment.Symbols = make(map[string]Symbol)
+			structSym.Environment.Symbols = make(core.SymbolStore)
 		}
 
 		if _, exists := structSym.Environment.Symbols[methodName]; exists {
