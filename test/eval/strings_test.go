@@ -1,7 +1,7 @@
 package eval
 
 import (
-	"lang/internal/env"
+	"lang/internal/core"
 	"lang/internal/eval"
 	"lang/internal/parser"
 	"reflect"
@@ -20,9 +20,9 @@ func varDef(name string, value parser.Node) parser.VarDefNode {
 	}
 }
 
-func checkSymbolType(symbol env.Symbol, expectedType any) bool {
-    actualType := reflect.TypeOf(symbol.Value())
-    return actualType == reflect.TypeOf(expectedType)
+func checkSymbolType(symbol core.Symbol, expectedType any) bool {
+	actualType := reflect.TypeOf(symbol.Value())
+	return actualType == reflect.TypeOf(expectedType)
 }
 
 func TestCapitalize(t *testing.T) {
@@ -35,9 +35,9 @@ func TestCapitalize(t *testing.T) {
 		Nodes: []parser.Node{
 			&varDecl,
 			&parser.StructMethodCall{
-				Caller: ident("testVar"),
+				Caller:     ident("testVar"),
 				MethodName: "capitalize",
-				Position: parser.Position{1, 1},
+				Position:   parser.Position{1, 1},
 			},
 		},
 	}
@@ -51,8 +51,8 @@ func TestCapitalize(t *testing.T) {
 	}
 
 	varSym := evaluator.Environment.FindSymbol("testVar")
-	
-	if (varSym.Value() == expect) {
+
+	if varSym.Value() == expect {
 		t.Errorf("Expect '%s', got '%s'", expect, varSym.Value())
 	}
 }
@@ -60,16 +60,18 @@ func TestCapitalize(t *testing.T) {
 func TestStringDoesContains(t *testing.T) {
 	varDecl := varDef(
 		"testVar",
-		&parser.LiteralNode{Value: "test does contain test"},
+		&parser.LiteralNode{Value: "it does contain test"},
 	)
 
 	input := parser.ProgramNode{
 		Nodes: []parser.Node{
 			&varDecl,
 			&parser.StructMethodCall{
-				Caller: ident("testVar"),
+				Caller:     ident("testVar"),
 				MethodName: "contains",
-				Args: []parser.Node{},
+				Args: []parser.Node{
+					&parser.LiteralNode{Value: "test"},
+				},
 				Position: parser.Position{1, 1},
 			},
 		},
@@ -84,8 +86,8 @@ func TestStringDoesContains(t *testing.T) {
 	}
 
 	varSym := evaluator.Environment.FindSymbol("testVar")
-	
-	if (varSym.Value() == expect) {
+
+	if varSym.Value() == expect {
 		t.Errorf("Expect '%s', got '%s'", expect, varSym.Value())
 	}
 }
