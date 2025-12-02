@@ -7,9 +7,9 @@ func is_palindrome(s) {
     }
 
     if (rev == s) {
-        print(s + " is a palindrome!");
+        println(s + " is a palindrome!");
     } else {
-        print(s + " is not a palindrome!");
+        println(s + " is not a palindrome!");
     }
 }
 

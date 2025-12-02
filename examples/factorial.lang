@@ -5,4 +5,7 @@ func factorial(n) {
     return factorial(n - 1) * n;
 }
 
-print(factorial(5));
+var numIpt = input("Enter factorial: ");
+var num = int(numIpt);
+
+println(factorial(num));
