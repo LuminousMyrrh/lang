@@ -13,7 +13,7 @@ import (
 )
 
 type BuiltinFunction func(e *Evaluator,
-		args []parser.Node, pos parser.Position) any
+	args []parser.Node, pos parser.Position) any
 
 func decodeEscapeSequences(input string) (string, error) {
 	// Wrap in quotes to make it a valid Go string literal
@@ -62,11 +62,12 @@ func builtinPrintln(e *Evaluator, args []parser.Node, pos parser.Position) any {
 				)
 				return nil
 			}
-			fmt.Println(decoded)
+			fmt.Print(decoded)
 		} else {
-			fmt.Println(val)
+			fmt.Print(val)
 		}
 	}
+	fmt.Println()
 	return core.NilValue{}
 }
 
@@ -270,6 +271,23 @@ func builtinWrite(e *Evaluator, args []parser.Node, pos parser.Position) any {
 	}
 }
 
+func builtinMod(e *Evaluator, args []parser.Node, pos parser.Position) any {
+	if len(args) != 2 {
+		e.GenError("float: expects two arguments", pos)
+		return nil
+	}
+	first := env.UnwrapBuiltinValue(e.EvalNode(args[0]))
+	second := env.UnwrapBuiltinValue(e.EvalNode(args[1]))
+
+	if v1, ok := first.(int); ok {
+		if v2, ok := second.(int); ok {
+			return v1 % v2
+		}
+	}
+	e.GenError(fmt.Sprintf("Types aren't the same: %T and %T", first, second), pos)
+	return nil
+}
+
 func (e *Evaluator) initBuiltintClasses() {
 	stringEnv := env.NewEnv(nil, "string")
 	stringEnv.AddVarSymbol(
@@ -307,6 +325,7 @@ func (e *Evaluator) initBuiltinMethods() {
 		"readAll": builtinReadAll,
 		"write":   builtinWrite,
 		"fetch":   builtinFetch,
+		"mod":     builtinMod,
 	}
 
 	e.Builtins = builtins
