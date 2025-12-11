@@ -15,6 +15,21 @@ func createNode(val, next) {
   return ln;
 }
 
+func createNodesFrom(numStr) {
+  var dummy = createNode(0, nil);
+  var prev = dummy;
+  var l = len(numStr);
+
+  for (var i = 0; i < l; i += 1) {
+    var d = int(numStr[i]);
+    var newNode = createNode(d, nil);
+    prev.Next = newNode;
+    prev = newNode;
+  }
+
+  return dummy.Next;
+}
+
 pub ListNode->gatherToArray() {
   var arr = [];
   var node = self;
@@ -85,29 +100,11 @@ func addTwo(l1, l2) {
 }
 
 func main() {
-  var input = ListNode {
-    Val: 2,
-    Next: ListNode {
-      Val: 4,
-      Next: ListNode {
-        Val: 3,
-        Next: nil,
-      }
-    }
-  };
+  var input = createNodesFrom("9999999");
 
-  var input2 = ListNode {
-    Val: 5,
-    Next: ListNode {
-      Val: 6,
-      Next: ListNode {
-        Val: 4,
-        Next: nil,
-      }
-    }
-  };
+  var input2 = createNodesFrom("9999");
 
-  print("First input: ");
+  print("First input:  ");
   var i = input;
   while (i != nil) {
     print(i.Val, " ");
@@ -126,7 +123,7 @@ func main() {
   println(" ");
 
   var sumNode = addTwo(input, input2);
-  print("Sum: ");
+  print("Sum:          ");
   j = sumNode;
   while (j != nil) {
     print(j.Val, " ");
