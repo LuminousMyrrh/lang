@@ -1,0 +1,139 @@
+// this piece of code can solve second problem in leetcode
+// https://leetcode.com/problems/add-two-numbers/
+
+class ListNode {
+  pub Val,
+  pub Next
+}
+
+func createNode(val, next) {
+  var ln = ListNode {
+    Val: val,
+    Next: next
+  };
+
+  return ln;
+}
+
+pub ListNode->gatherToArray() {
+  var arr = [];
+  var node = self;
+  var i = 0;
+  while (node != nil) {
+    arr[i] = node.Val;
+    node = node.Next;
+    i += 1;
+  }
+
+  return arr;
+}
+
+func reverse(a) {
+    var i = 0;
+    var j = len(a) - 1;
+    while (i < j) {
+      var temp = a[i];
+      a[i] = a[j];
+      a[j] = temp;
+      i += 1;
+      j -= 1;
+    }
+}
+
+func digitsToInt(digs) {
+  var n = 0;
+  for (var i = 0; i < len(digs); i += 1) {
+    n = n * 10 + digs[i];
+  }
+
+  return n;
+}
+
+func intToNodes(n) {
+  if (n == 0) {
+    return createNode(0, nil);
+  }
+
+  var dummy = createNode(0, nil);
+  var prev = dummy;
+
+  while (n > 0) {
+    var d = mod(n, 10);
+    var newNode = createNode(d, nil);
+    prev.Next = newNode;
+    prev = newNode;
+
+    n = n / 10;
+  }
+
+  return dummy.Next;
+}
+
+func addTwo(l1, l2) {
+  var firstArrNum = l1.gatherToArray();
+  var secondArrNum = l2.gatherToArray();
+
+  reverse(firstArrNum);
+  reverse(secondArrNum);
+  
+  var num1 = digitsToInt(firstArrNum);
+  var num2 = digitsToInt(secondArrNum);
+
+  var sum = num1 + num2;
+  
+  return intToNodes(sum);
+}
+
+func main() {
+  var input = ListNode {
+    Val: 2,
+    Next: ListNode {
+      Val: 4,
+      Next: ListNode {
+        Val: 3,
+        Next: nil,
+      }
+    }
+  };
+
+  var input2 = ListNode {
+    Val: 5,
+    Next: ListNode {
+      Val: 6,
+      Next: ListNode {
+        Val: 4,
+        Next: nil,
+      }
+    }
+  };
+
+  print("First input: ");
+  var i = input;
+  while (i != nil) {
+    print(i.Val, " ");
+    i = i.Next;
+  }
+
+  println(" ");
+
+  print("Second input: ");
+  var j = input2;
+  while (j != nil) {
+    print(j.Val, " ");
+    j = j.Next;
+  }
+
+  println(" ");
+
+  var sumNode = addTwo(input, input2);
+  print("Sum: ");
+  j = sumNode;
+  while (j != nil) {
+    print(j.Val, " ");
+    j = j.Next;
+  }
+
+  println(" ");
+}
+
+main();
