@@ -288,6 +288,26 @@ func builtinMod(e *Evaluator, args []parser.Node, pos parser.Position) any {
 	return nil
 }
 
+func builtinOrd(e *Evaluator, args []parser.Node, pos parser.Position) any {
+	if len(args) != 1 {
+		e.GenError("float: expects one argument", pos)
+		return nil
+	}
+	symbol := env.UnwrapBuiltinValue(e.EvalNode(args[0]))
+
+	if s, ok := symbol.(string); ok {
+		rs := []rune(s);
+		if len(rs) != 1 {
+			return nil
+		}
+		
+		return int(rs[0])
+	}
+
+	e.GenError(fmt.Sprintf("%T", symbol), pos)
+	return nil
+}
+
 func (e *Evaluator) initBuiltintClasses() {
 	stringEnv := env.NewEnv(nil, "string")
 	stringEnv.AddVarSymbol(
@@ -326,6 +346,7 @@ func (e *Evaluator) initBuiltinMethods() {
 		"write":   builtinWrite,
 		"fetch":   builtinFetch,
 		"mod":     builtinMod,
+		"ord":     builtinOrd,
 	}
 
 	e.Builtins = builtins
